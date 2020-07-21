@@ -35,7 +35,7 @@ if __name__ == "__main__":
               , "spider_num": 1
               , "retries": 3
               , "request_timeout": 3
-              , "completetimeout": 5*60
+              , "completetimeout": 1*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
               , "seeds_file": "resource/buyer_phone.3"
