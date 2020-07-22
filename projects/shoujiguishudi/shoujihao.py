@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from multiprocess.core.spider import SpiderManger, Seed
+from projects.secoo.spider import SpiderManger, Seed
 from multiprocess.core import HttpProxy
 from multiprocess.tools import process_manger
-import time
+from multiprocess.tools import stringUtils
 import re
 import sys
 
@@ -12,8 +12,14 @@ import sys
 class Phone(SpiderManger):
     def __init__(self, seeds_file, **kwargs):
         super(Phone, self).__init__(**kwargs)
+        self.phone_regx = re.compile(r'^\d{11,11}$')
+        self.phone_number_checker = stringUtils.check_legality(pattern=r'^\d{11,11}$')
         for seed in open(seeds_file):
-            self.seeds_queue.put(Seed(seed.strip("\n"), kwargs["retries"]))
+            seed = seed.strip("\n")
+            if(self.phone_number_checker(seed)):
+                self.seeds_queue.put(Seed(seed, kwargs["retries"]))
+            else:
+                self.log.info("legal_format: " + seed)
         self.pro_city_pattern = re.compile(r'<dd><span>号码归属地：</span>(.*?) (.*?)</dd>')
         self.telcompany_pattern = re.compile(r'<dd><span>手机卡类型：</span>(.*?)</dd>')
 

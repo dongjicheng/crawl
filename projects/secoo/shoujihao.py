@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from multiprocess.core.spider import SpiderManger, Seed
+from projects.secoo.spider import SpiderManger, Seed
 from multiprocess.core import HttpProxy
 from multiprocess.tools import process_manger
-import time
 import re
 import sys
 
