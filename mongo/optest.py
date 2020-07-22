@@ -13,4 +13,5 @@ pipeline = [
 ]
 
 with op.DBManger() as m:
-    m.drop_db_collect(("secoo","List20190917"))
+    for i in m.read_from(("jicheng","jdprice"),pipeline=pipeline,out_field=("_id","count")):
+        print(i)
