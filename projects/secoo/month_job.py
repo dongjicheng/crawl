@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from projects.secoo.spider import SpiderManger, Seed
+from multiprocess.core.spider import SpiderManger, Seed
 from multiprocess.core import HttpProxy
 from multiprocess.tools import process_manger
 import re
 import sys
+from datetime import datetime
+from multiprocess.tools import timeUtil
 
 
 class Phone(SpiderManger):
@@ -28,17 +30,18 @@ class Phone(SpiderManger):
 
 
 if __name__ == "__main__":
+    current_date = timeUtil.current_time()
     process_manger.kill_old_process(sys.argv[0])
     import logging
-    config = {"job_name": "shoujiguishudi"
+    config = {"job_name": "secoo_month_job"
               , "spider_num": 1
               , "retries": 3
               , "request_timeout": 3
-              , "completetimeout": 5*60
+              , "completetimeout": 1*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
               , "seeds_file": "resource/buyer_phone.3"
-              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng", "collection": "shoujiguishudi"}
+              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "secoComment" + current_date}
               , "proxies": HttpProxy.getProxy()
               , "log_config": {"level": logging.DEBUG, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
