@@ -4,7 +4,7 @@ from mongo import op
 pipeline = [
     {
         "$match": {
-            "_status": 0
+            "code": 0
         }
     },
     {"$group": {"_id": "$skuIds"}},
@@ -13,4 +13,4 @@ pipeline = [
 ]
 
 with op.DBManger() as m:
-    m.drop_db_collect(("secoo","List20190917"))
+    print(m.list_tables("secoo",filter={"name": {"$regex": r"List20\d\d\d\d\d\d"}}))

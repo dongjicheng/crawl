@@ -39,6 +39,7 @@ class SecooWeekJob(SpiderManger):
 
     def parse_item(self, content, seed):
         try:
+            results = []
             block = self.block_pattern.findall(content)
             for item in block:
                 pid = self.pid_pattern.findall(item)
@@ -81,10 +82,10 @@ class SecooWeekJob(SpiderManger):
                 else:
                     price = 'NA'
 
-                result = {"code": 0, "pid": pid, "name": name, "lo": lo, "self": ziying}
+                results.append({"code": 0, "pid": pid, "name": name, "lo": lo, "self": ziying,"price":price})
         except:
-            result = {"code": 1}
-        return [result]
+            results.append({"code": 1})
+        return results
 
 
 if __name__ == "__main__":

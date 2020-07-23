@@ -49,15 +49,16 @@ class Seed(object):
 
 
 class ThreadMonitor(threading.Thread):
-    def __init__(self, total, comlete, interval=1):
+    def __init__(self, total, comlete, interval=1, bar_name=None):
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.total = total
         self.comlete = comlete
         self.interval = interval
+        self.bar_name = bar_name
 
     def run(self):
-        with tqdm(total=self.total) as pbar:
+        with tqdm(total=self.total, desc=self.bar_name) as pbar:
             last_size = 0
             while True:
                 end = time.time() + self.interval

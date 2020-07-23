@@ -17,6 +17,11 @@ class DBManger(object):
     def switch_db_collection(self, db_collection):
         self.collection = self.client[db_collection[0]][db_collection[1]]
 
+    def list_tables(self, db, filter=None):
+        #filter = {"name": {"$regex": r"^(?!system\\.)"}}
+        self.db = self.client[db]
+        return self.db.list_collection_names(filter=filter)
+
     def close(self):
         self.client.close()
 
