@@ -10,9 +10,9 @@ from datetime import datetime
 from multiprocess.tools import timeUtil
 
 
-class Phone(SpiderManger):
+class SecooMonthJob(SpiderManger):
     def __init__(self, seeds_file, **kwargs):
-        super(Phone, self).__init__(**kwargs)
+        super(SecooMonthJob, self).__init__(**kwargs)
         for seed in open(seeds_file):
             self.seeds_queue.put(Seed(seed.strip("\n"), kwargs["retries"]))
         self.pro_city_pattern = re.compile(r'<dd><span>号码归属地：</span>(.*?) (.*?)</dd>')
@@ -47,5 +47,5 @@ if __name__ == "__main__":
               , "headers":{"Connection":"close"}}
     #from multiprocess.config import default_config
     #p = Phone(**default_config.config)
-    p = Phone(**config)
+    p = SecooMonthJob(**config)
     p.main_loop(show_process=True)
