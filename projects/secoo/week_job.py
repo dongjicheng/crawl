@@ -25,10 +25,14 @@ class SecooWeekJob(SpiderManger):
         self.br_pattern = re.compile(r'</i>.*?</span')
         for r in ranges:
             page = self.get_request(request_url="http://list.secoo.com/all/0-0-0-0-0-7-0-0-0-10-{0}_{1}-0-100-0.shtml".format(r[0], r[1]))
-            page_num = int(totalpages_pattern.findall(page)[0])
-            self.log.info((page_num, r[0], r[1]))
-            for pageindex in range(1, page_num + 1):
-                self.seeds_queue.put(Seed((pageindex,r[0],r[1]), kwargs["retries"]))
+            tmp = totalpages_pattern.findall(page)
+            if tmp:
+                page_num = int(tmp[0])
+                self.log.info((page_num, r[0], r[1]))
+                for pageindex in range(1, page_num + 1):
+                    self.seeds_queue.put(Seed((pageindex, r[0], r[1]), kwargs["retries"]))
+            else:
+                self.log.info((0, r[0], r[1]))
 
     def make_requset_url(self, seed):
         return "http://list.secoo.com/all/0-0-0-0-0-7-0-0-{0}-10-{1}_{2}-0-100-0.shtml".format(*seed.value)
@@ -88,16 +92,17 @@ if __name__ == "__main__":
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "secoo_month_job"
-              , "spider_num": 2
+              , "spider_num": 23
               , "retries": 3
-              , "request_timeout": 3
+              , "request_timeout": 10
               , "completetimeout": 1*60
-              , "sleep_interval": 1
-              , "rest_time": 10
+              , "sleep_interval": 10
+              , "rest_time": 15
               , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "List" + current_date}
-              , "proxies": HttpProxy.getProxy()
+              #, "proxies": HttpProxy.getProxy()
+              , "proxies": []
               , "log_config": {"level": logging.INFO, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close"}}
+              , "headers":{"Connection":"close",'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
     p = SecooWeekJob(**config)
     p.main_loop(show_process=True)

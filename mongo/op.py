@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pymongo
-from multiprocess.config import  default_config
+from multiprocess.config import default_config
 
 
 class DBManger(object):
