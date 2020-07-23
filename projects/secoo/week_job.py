@@ -12,8 +12,9 @@ import numpy as np
 
 
 class SecooWeekJob(SpiderManger):
-    def __init__(self, seeds_file, **kwargs):
+    def __init__(self, current_date, **kwargs):
         super(SecooWeekJob, self).__init__(**kwargs)
+        self.current_date = current_date
         space = np.linspace(0, 5800000, kwargs["spider_num"] + 1)
         ranges = [(int(space[i]), int(space[i + 1])) for i in range(len(space) - 1)]
         totalpages_pattern = re.compile(r'<strong>共<i>(\d+)</i>页，到第 <b>')
@@ -82,10 +83,29 @@ class SecooWeekJob(SpiderManger):
                 else:
                     price = 'NA'
 
-                results.append({"code": 0, "pid": pid, "name": name, "lo": lo, "self": ziying,"price":price})
+                results.append({"code": 0, "pid": pid, "name": name, "lo": lo, "self": ziying,"price":price,"_date":self.current_date})
         except:
             results.append({"code": 1})
         return results
+
+    def clean_price(self):
+        from mongo import op
+        pipeline = [
+            {"$match":
+                 {"pid": {"$ne": "null"}}
+             }
+        ]
+        with op.DBManger() as m:
+            dic = {}
+            m.rename_collection(old_db_collection=("secoo", "CleanListNew"),
+                                new_db_collection=("secoo", "CleanListOld"))
+            for pid, price in m.read_from(db_collect=("secoo", "CleanListOld"), out_field=("pid", "price")):
+                dic.update({pid: price})
+            for pid, price in m.read_from(db_collect=("secoo", "List" + self.current_date), out_field=("pid", "price"),
+                                          pipeline=pipeline):
+                dic.update({pid: price})
+            m.date_tuple_to_db(date_tuple_list=dic.items(), db_collect=("secoo", "CleanListNew"),
+                               fields_tupe=("pid", "price"), buffer_size=128, attach_dict={"_date": self.current_date})
 
 
 if __name__ == "__main__":
@@ -99,11 +119,12 @@ if __name__ == "__main__":
               , "completetimeout": 1*60
               , "sleep_interval": 10
               , "rest_time": 15
-              , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "List" + current_date}
               #, "proxies": HttpProxy.getProxy()
               , "proxies": []
               , "log_config": {"level": logging.INFO, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close",'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
-    p = SecooWeekJob(**config)
+    p = SecooWeekJob(current_date, **config)
     p.main_loop(show_process=True)
+    p.clean_price()
+

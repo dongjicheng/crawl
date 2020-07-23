@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import pymongo
 from multiprocess.config import default_config
+from tqdm import tqdm
 
 
 class DBManger(object):
@@ -51,6 +52,10 @@ class DBManger(object):
         self.switch_db_collection(db_collect)
         self.collection.insert_many([dict(zip(fields, data_tupe))for data_tupe in data_tupe_list])
 
+    def rename_collection(self, old_db_collection, new_db_collection):
+        self.switch_db_collection(old_db_collection)
+        self.collection.rename(new_db_collection[1])
+
     def drop_db_collect(self, db_collect):
         self.client[db_collect[0]].drop_collection(db_collect[1])
 
@@ -72,6 +77,36 @@ class DBManger(object):
             if len(cache) == buffer_size:
                 self.insert_many_dict(db_collect, data_dict_list=cache)
                 cache = []
+        if cache:
+            self.insert_many_dict(db_collect, data_dict_list=cache)
+
+    def date_tuple_to_db(self, date_tuple_list, db_collect, fields_tupe, buffer_size=64, attach_dict=None, show_process_bar=False):
+        cache = []
+        if attach_dict:
+            safe_attach_dict = {}
+            for key in attach_dict.keys():
+                if key in fields_tupe:
+                    safe_attach_dict["_" + key] = attach_dict[key]
+                else:
+                    safe_attach_dict[key] = attach_dict[key]
+        if show_process_bar:
+            for line_tupe in tqdm(date_tuple_list, desc="date_tuple_to_db"):
+                data = dict(zip(fields_tupe, line_tupe))
+                if safe_attach_dict:
+                    data.update(safe_attach_dict)
+                cache.append(data)
+                if len(cache) == buffer_size:
+                    self.insert_many_dict(db_collect, data_dict_list=cache)
+                    cache = []
+        else:
+            for line_tupe in date_tuple_list:
+                data = dict(zip(fields_tupe, line_tupe))
+                if safe_attach_dict:
+                    data.update(safe_attach_dict)
+                cache.append(data)
+                if len(cache) == buffer_size:
+                    self.insert_many_dict(db_collect, data_dict_list=cache)
+                    cache = []
         if cache:
             self.insert_many_dict(db_collect, data_dict_list=cache)
 

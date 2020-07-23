@@ -41,11 +41,13 @@ class SuccessResult(Exception):
 
 
 class Seed(object):
-    def __init__(self, value, retries=3):
+    def __init__(self, value, retries=3, type = None):
         self.retries = retries
         self.value = value
+        self.type = type
+
     def __str__(self):
-        return str(self.value) + "," + str(self.retries)
+        return str(self.value) + "," + str(self.retries) + "," + str(self.type)
 
 
 class ThreadMonitor(threading.Thread):
@@ -127,28 +129,29 @@ class SpiderManger(object):
 
     def process(self, seed):
         url = self.make_requset_url(seed)
-        content = self.get_request(url)
-        if content == "":
-            seed.retries = seed.retries - 1
-            if seed.retries > 0:
-                self.seeds_queue.put(seed)
-                self.comlete.value -= 1
-                time.sleep(self.rest_time)
-                return [{"_status": 3,"_seed":seed.value}]
+        if url:
+            content = self.get_request(url)
+            if content == "":
+                seed.retries = seed.retries - 1
+                if seed.retries > 0:
+                    self.seeds_queue.put(seed)
+                    self.comlete.value -= 1
+                    time.sleep(self.rest_time)
+                    return [{"_status": 3,"_seed":seed.value}]
+                else:
+                    return [{"_status": 1,"_seed":seed.value}]
             else:
-                return [{"_status": 1,"_seed":seed.value}]
-        else:
-            try:
-                result = self.parse_item(content, seed)
-                if result:
-                    if isinstance(result, list):
-                        result = list(map(lambda x : dict(list(x.items())+[("_status",0),("_seed",seed.value)]),result))
-                        return result
-                    else:
-                        result.update({"_status":0,"_seed":seed.value})
-                        return [result]
-            except Exception as e:
-                return [{"_status": 2,"_seed":seed.value}]
+                try:
+                    result = self.parse_item(content, seed)
+                    if result:
+                        if isinstance(result, list):
+                            result = list(map(lambda x : dict(list(x.items())+[("_status",0),("_seed",seed.value)]),result))
+                            return result
+                        else:
+                            result.update({"_status":0,"_seed":seed.value})
+                            return [result]
+                except Exception as e:
+                    return [{"_status": 2,"_seed":seed.value}]
 
     def run(self):
         client = pymongo.MongoClient(self.mongo_config["addr"])

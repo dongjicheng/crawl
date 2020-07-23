@@ -13,4 +13,9 @@ pipeline = [
 ]
 
 with op.DBManger() as m:
-    print(m.list_tables("secoo",filter={"name": {"$regex": r"List20\d\d\d\d\d\d"}}))
+    print(m.list_tables("secoo",filter={"name": "CleanListNew"}))
+
+def aaa():
+    pass
+
+print(aaa())
