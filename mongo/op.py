@@ -80,7 +80,8 @@ class DBManger(object):
         if cache:
             self.insert_many_dict(db_collect, data_dict_list=cache)
 
-    def date_tuple_to_db(self, date_tuple_list, db_collect, fields_tupe, buffer_size=64, attach_dict=None, show_process_bar=False):
+    def date_tuple_to_db(self, date_tuple_list, db_collect, fields_tupe, buffer_size=64,
+                         attach_dict=None, show_pbar=False, pbar_name=None):
         cache = []
         if attach_dict:
             safe_attach_dict = {}
@@ -89,8 +90,8 @@ class DBManger(object):
                     safe_attach_dict["_" + key] = attach_dict[key]
                 else:
                     safe_attach_dict[key] = attach_dict[key]
-        if show_process_bar:
-            for line_tupe in tqdm(date_tuple_list, desc="date_tuple_to_db"):
+        if show_pbar:
+            for line_tupe in tqdm(date_tuple_list, desc=pbar_name):
                 data = dict(zip(fields_tupe, line_tupe))
                 if safe_attach_dict:
                     data.update(safe_attach_dict)

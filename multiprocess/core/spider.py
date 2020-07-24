@@ -5,7 +5,7 @@ import sys
 import requests
 import json
 import random
-from multiprocessing import Queue, Process, Value, Manager
+from multiprocessing import Process, Value, Manager
 import re
 import chardet
 import os
@@ -83,7 +83,8 @@ class SpiderManger(object):
         self.ua = UserAgent()
         self.headers = headers
         self.job_name = job_name
-        self.seeds_queue = Queue()
+        self.manger = Manager()
+        self.seeds_queue = self.manger.Queue()
         self.comlete = Value(ctypes.c_int, 0)
         self.proxy = proxies
         self.spider_num = spider_num

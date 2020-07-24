@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+import time
+
 from multiprocess.core.spider import SpiderManger, Seed
 from multiprocess.core import HttpProxy
 from multiprocess.tools import process_manger
@@ -34,7 +37,6 @@ class SecooWeekJob(SpiderManger):
                     self.seeds_queue.put(Seed((pageindex, r[0], r[1]), kwargs["retries"]))
             else:
                 self.log.info((0, r[0], r[1]))
-
     def make_requset_url(self, seed):
         return "http://list.secoo.com/all/0-0-0-0-0-7-0-0-{0}-10-{1}_{2}-0-100-0.shtml".format(*seed.value)
 
@@ -105,7 +107,24 @@ class SecooWeekJob(SpiderManger):
                                           pipeline=pipeline):
                 dic.update({pid: price})
             m.date_tuple_to_db(date_tuple_list=dic.items(), db_collect=("secoo", "CleanListNew"),
-                               fields_tupe=("pid", "price"), buffer_size=128, attach_dict={"_date": self.current_date})
+                               fields_tupe=("pid", "price"), buffer_size=128, attach_dict={"_date": self.current_date},
+                               show_pbar=True, pbar_name="clean_price")
+
+    def init_clean_price(self):
+        from mongo import op
+        from tqdm import tqdm
+        pipeline = [
+            {"$match":
+                 {"pid": {"$ne": "null"}}
+             }
+        ]
+        with op.DBManger() as m:
+            dic = {}
+            for collection in tqdm(m.list_tables("secoo", filter={"name": {"$regex": r"List20\d\d\d\d\d\d"}}),desc="init_clean_price"):
+                for pid, price in m.read_from(db_collect=("secoo", collection), out_field=("pid", "price"), pipeline=pipeline):
+                    dic.update({pid: price})
+            m.date_tuple_to_db(date_tuple_list=dic.items(),db_collect=("secoo", "CleanListNew"),
+                               fields_tupe=("pid","price"), buffer_size=128, attach_dict={"_date": self.current_date})
 
 
 if __name__ == "__main__":
@@ -113,18 +132,18 @@ if __name__ == "__main__":
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "secoo_month_job"
-              , "spider_num": 23
+              , "spider_num": 1
               , "retries": 3
-              , "request_timeout": 10
-              , "completetimeout": 1*60
-              , "sleep_interval": 10
-              , "rest_time": 15
+              , "request_timeout": 1
+              , "completetimeout": 1
+              , "sleep_interval": 1
+              , "rest_time": 1
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "List" + current_date}
               #, "proxies": HttpProxy.getProxy()
               , "proxies": []
               , "log_config": {"level": logging.INFO, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close",'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
     p = SecooWeekJob(current_date, **config)
-    p.main_loop(show_process=True)
-    p.clean_price()
+    #p.main_loop(show_process=True)
+    #p.clean_price()
 
