@@ -132,18 +132,22 @@ if __name__ == "__main__":
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "secoo_month_job"
-              , "spider_num": 1
-              , "retries": 3
-              , "request_timeout": 1
-              , "completetimeout": 1
-              , "sleep_interval": 1
-              , "rest_time": 1
-              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "List" + current_date}
-              #, "proxies": HttpProxy.getProxy()
-              , "proxies": []
-              , "log_config": {"level": logging.INFO, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close",'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
+        , "spider_num": 1
+        , "retries": 3
+        , "request_timeout": 10
+        , "completetimeout": 1 * 60
+        , "sleep_interval": 10
+        , "rest_time": 15
+        , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo",
+                           "collection": "List" + current_date}
+              # , "proxies": HttpProxy.getProxy()
+        , "proxies": []
+        , "log_config": {"level": logging.INFO,
+                         "format": '%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
+        , "headers": {"Connection": "close",
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
     p = SecooWeekJob(current_date, **config)
     #p.main_loop(show_process=True)
     #p.clean_price()
+    p.init_clean_price()
 

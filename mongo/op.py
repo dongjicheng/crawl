@@ -18,10 +18,10 @@ class DBManger(object):
     def switch_db_collection(self, db_collection):
         self.collection = self.client[db_collection[0]][db_collection[1]]
 
-    def list_tables(self, db, filter=None):
+    def list_tables(self, dbname, filter=None):
         #filter = {"name": {"$regex": r"^(?!system\\.)"}}
-        self.db = self.client[db]
-        return self.db.list_collection_names(filter=filter)
+        db = self.client[dbname]
+        return db.list_collection_names(filter=filter)
 
     def close(self):
         self.client.close()
@@ -29,8 +29,13 @@ class DBManger(object):
     def read_from(self, db_collect, out_field, pipeline=None):
         self.switch_db_collection(db_collect)
         if pipeline is None:
+            tmp = []
+            for key in out_field:
+                tmp.append(1)
+            filter=dict(zip(out_field,tmp))
+            filter.update({"_id":0})
             result = map(lambda x: tuple([x[field] for field in out_field]),
-                        self.collection.find({}))
+                        self.collection.find({},filter))
         else:
             result = map(lambda x: tuple([x[field] for field in out_field]),
                         self.collection.aggregate(pipeline, allowDiskUse=True))
@@ -39,6 +44,10 @@ class DBManger(object):
     def insert_one_dict(self, db_collect, data_dict):
         self.switch_db_collection(db_collect)
         self.collection.insert_one(data_dict)
+
+    def count(self,db_collect, filter=None):
+        self.switch_db_collection(db_collect)
+        return self.collection.count(filter=filter)
 
     def insert_many_dict(self, db_collect, data_dict_list):
         self.switch_db_collection(db_collect)
@@ -59,7 +68,7 @@ class DBManger(object):
     def drop_db_collect(self, db_collect):
         self.client[db_collect[0]].drop_collection(db_collect[1])
 
-    def load_file_to_db(self, filename, db_collect, fields_tupe, sep="\t", buffer_size=64, attach_dict=None):
+    def load_file_to_db(self, filename, db_collect, fields_tupe, column_index_list=None, sep="\t", buffer_size=64, attach_dict=None):
         cache = []
         if attach_dict:
             safe_attach_dict = {}
@@ -70,6 +79,11 @@ class DBManger(object):
                     safe_attach_dict[key] = attach_dict[key]
         for line in open(filename):
             line = line.strip("\n").split(sep)
+            if column_index_list:
+                tmp_line=[]
+                for item_index in column_index_list:
+                    tmp_line.append(line[item_index])
+                line = tmp_line
             date = dict(zip(fields_tupe, line))
             if safe_attach_dict:
                 date.update(safe_attach_dict)

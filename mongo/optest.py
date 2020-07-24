@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from mongo import op
+from tqdm import tqdm
 pipeline = [
     {
         "$match": {
@@ -13,7 +14,8 @@ pipeline = [
 ]
 
 with op.DBManger() as m:
-    print(m.list_tables("secoo",filter={"name": "CleanListNew"}))
+    for p in m.read_from(db_collect=("secoo","CleanListNew"),out_field=("pid",)):
+        print(p)
 
 def aaa():
     pass

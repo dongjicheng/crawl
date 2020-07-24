@@ -18,7 +18,9 @@ class SecooMonthJob(SpiderManger):
         super(SecooMonthJob, self).__init__(**kwargs)
         self.current_date = current_date
         with op.DBManger() as m:
-            for pid, price in m.read_from(db_collect=("secoo", "CleanListNew"), out_field=("pid", "price")):
+            total = m.count(db_collect=("secoo", "CleanListNew"))
+            for pid, price in tqdm(m.read_from(db_collect=("secoo", "CleanListNew"), out_field=("pid", "price")),
+                                   total=total, desc="reading"):
                 self.seeds_queue.put(Seed((pid, price), kwargs["retries"], type=0))
         self.seed_retries = kwargs["retries"]
         self.page_pattern = re.compile(r'totalCurrCommentNum":.*?,')
@@ -30,23 +32,6 @@ class SecooMonthJob(SpiderManger):
         self.user_pattern = re.compile(r'userName":".*?"')
         self.device_pattern = re.compile(r'sourceDevice":".*?"')
 
-    def clean_price(self):
-        pipeline = [
-            {"$match":
-                 {"pid": {"$ne": "null"}}
-             }
-        ]
-        with op.DBManger() as m:
-            dic = {}
-            m.rename_collection(old_db_collection=("secoo", "CleanListNew"), new_db_collection=("secoo", "CleanListOld"))
-            for pid, price in m.read_from(db_collect=("secoo", "CleanListOld"), out_field=("pid", "price"), pipeline=pipeline):
-                dic.update({pid: price})
-            for collection in tqdm(m.list_tables("secoo", filter={"name": {"$regex": r"List20\d\d\d\d\d\d"}}),desc="clean_price"):
-                for pid, price in m.read_from(db_collect=("secoo", collection), out_field=("pid", "price"), pipeline=pipeline):
-                    dic.update({pid: price})
-            m.date_tuple_to_db(date_tuple_list=dic.items(),db_collect=("secoo", "CleanListNew"),
-                               fields_tupe=("pid","price"), buffer_size=128, attach_dict={"_date": self.current_date})
-
     def make_requset_url(self, seed):
         if seed.type == 0:
             url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page=1' \
@@ -55,7 +40,7 @@ class SecooMonthJob(SpiderManger):
         elif seed.type == 1:
             url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page={0}' \
                   '&pageSize=10&productBrandId=&productCategoryId=&productId={1}&type=0&callback=jsonp1'
-            return url.format(**seed.value)
+            return url.format(seed.value[2],seed.value[0])
 
     def parse_item(self, content, seed):
         if seed.type == 0:

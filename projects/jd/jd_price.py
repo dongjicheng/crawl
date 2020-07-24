@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from projects.secoo.spider import SpiderManger, Seed
+from multiprocess.core.spider import SpiderManger, Seed
 from multiprocess.tools import process_manger
 import re
 import sys
 import random
+from multiprocess.tools import timeUtil
 
 
 class JDPrice(SpiderManger):
@@ -71,6 +72,7 @@ class JDPrice(SpiderManger):
 
 
 if __name__ == "__main__":
+    current_date = timeUtil.current_time()
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "jdprice"
@@ -81,7 +83,7 @@ if __name__ == "__main__":
               , "sleep_interval": 0.5
               , "rest_time": 0.5
               , "seeds_file": "resource/buyer_phone.3"
-              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng", "collection": "jdprice"}
+              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.DEBUG, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
