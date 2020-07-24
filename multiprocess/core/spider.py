@@ -5,7 +5,7 @@ import sys
 import requests
 import json
 import random
-from multiprocessing import Process, Value, Manager
+from multiprocessing import Process, Value, Queue
 import re
 import chardet
 import os
@@ -83,8 +83,8 @@ class SpiderManger(object):
         self.ua = UserAgent()
         self.headers = headers
         self.job_name = job_name
-        self.manger = Manager()
-        self.seeds_queue = self.manger.Queue()
+        self.seeds_queue = Queue()
+        self.seeds_queue.cancel_join_thread()
         self.comlete = Value(ctypes.c_int, 0)
         self.proxy = proxies
         self.spider_num = spider_num
@@ -93,9 +93,15 @@ class SpiderManger(object):
         import logging
         logging.basicConfig(**log_config)
         self.log = logging
-
+        self.log.info("output_db_collection: " + str(self.mongo_config["db"],self.mongo_config["collection"]))
         for i in range(self.spider_num):
             self.spider_list.append(Process(target=self.run, name="Spider-" + str(i)))
+
+    def progress_increase(self):
+        self.comlete.value += 1
+
+    def progress_decrease(self):
+        self.comlete.value -= 1
 
     def get_request(self, request_url, encoding=None):
         headers = {"User-Agent": self.ua.chrome}
@@ -135,9 +141,9 @@ class SpiderManger(object):
             if content == "":
                 seed.retries = seed.retries - 1
                 if seed.retries > 0:
-                    self.seeds_queue.put(seed)
-                    self.comlete.value -= 1
                     time.sleep(self.rest_time)
+                    self.seeds_queue.put(seed)
+                    self.progress_decrease()
                     return [{"_status": 3,"_seed":seed.value}]
                 else:
                     return [{"_status": 1,"_seed":seed.value}]
@@ -160,7 +166,7 @@ class SpiderManger(object):
         while True:
             try:
                 seed = self.seeds_queue.get(timeout=self.completetimeout)
-                self.comlete.value += 1
+                self.progress_increase()
                 if self.sleep_interval != -1:
                     time.sleep(self.sleep_interval)
             except Exception as e:
@@ -184,6 +190,7 @@ class SpiderManger(object):
             m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete)
             m.start()
         for p in self.spider_list:
+            p.daemon = True
             p.start()
         for p in self.spider_list:
             p.join()

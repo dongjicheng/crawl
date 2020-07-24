@@ -14,16 +14,14 @@ class JDPrice(SpiderManger):
         super(JDPrice, self).__init__(**kwargs)
         with open(seeds_file) as infile:
             for i, seed in enumerate(infile):
-                current = seed.strip('\n')
+                current = seed.strip('\n').split("\t")[0]
                 if i % 60 == 0:
                     if i != 0:
-                        self.log.info(strr)
                         self.seeds_queue.put(Seed(strr, kwargs["retries"]))
                     strr = current
                 else:
                     strr = strr + '%2CJ_' + current
         if strr:
-            self.log.info(strr)
             self.seeds_queue.put(Seed(strr, kwargs["retries"]))
         self.price_ad = 'http://p.3.cn/prices/mgets?&type=1&skuIds=J_'
 
@@ -43,7 +41,6 @@ class JDPrice(SpiderManger):
 
     def make_requset_url(self, seed):
         price_address = "http://p.3.cn/prices/mgets?&type=1&skuIds=J_" + seed.value + '&pduid=' + self.usrid
-        print(price_address)
         return price_address
 
     def parse_item(self, content, seed):
@@ -67,7 +64,7 @@ class JDPrice(SpiderManger):
                                 sale = self.p_pattern.findall(j)
                         info = str(info) + '\t' + str(sale[0])
                     info = info.lstrip("\t")
-                    result.append(dict(zip(["skuIds","p1","p2","p3"], info.split("\t"))))
+                    result.append({"values": info})
         return result
 
 
@@ -82,7 +79,7 @@ if __name__ == "__main__":
               , "completetimeout": 5*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
-              , "seeds_file": "resource/buyer_phone.3"
+              , "seeds_file": "/home/u9000/martingale/jd_month/month202006"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.DEBUG, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}

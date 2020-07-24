@@ -3,7 +3,7 @@
 import re
 
 
-def check_legality(self, pattern):
+def check_legality(pattern):
     regex = re.compile(pattern)
 
     def is_valid(input_str):
