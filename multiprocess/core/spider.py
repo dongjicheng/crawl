@@ -187,7 +187,7 @@ class SpiderManger(object):
 
     def main_loop(self, show_process=True):
         if show_process:
-            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete)
+            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete, bar_name="爬取进度")
             m.start()
         for p in self.spider_list:
             p.daemon = True
