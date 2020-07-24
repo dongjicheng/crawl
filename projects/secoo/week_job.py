@@ -147,7 +147,6 @@ if __name__ == "__main__":
         , "headers": {"Connection": "close",
                       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
     p = SecooWeekJob(current_date, **config)
-    #p.main_loop(show_process=True)
-    #p.clean_price()
-    p.init_clean_price()
+    p.main_loop(show_process=True)
+    p.clean_price()
 
