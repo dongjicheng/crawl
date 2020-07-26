@@ -38,7 +38,7 @@ if __name__ == "__main__":
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "shoujiguishudi"
-              , "spider_num": 1
+              , "spider_num": 23
               , "retries": 3
               , "request_timeout": 3
               , "completetimeout": 1*60
@@ -47,7 +47,7 @@ if __name__ == "__main__":
               , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng", "collection": "shoujiguishudi"}
               , "proxies": HttpProxy.getProxy()
-              , "log_config": {"level": logging.DEBUG, "filename": sys.argv[0] + '.c', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
+              , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.c', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
     #from multiprocess.config import default_config
     #p = Phone(**default_config.config)

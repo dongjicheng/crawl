@@ -132,7 +132,7 @@ if __name__ == "__main__":
     process_manger.kill_old_process(sys.argv[0])
     import logging
     config = {"job_name": "secoo_month_job"
-        , "spider_num": 1
+        , "spider_num": 23
         , "retries": 3
         , "request_timeout": 10
         , "completetimeout": 1 * 60

@@ -82,7 +82,7 @@ if __name__ == "__main__":
               , "seeds_file": "/home/u9000/martingale/jd_month/month202006"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
-              , "log_config": {"level": logging.DEBUG, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
+              , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
     p = JDPrice(**config)
     p.main_loop(show_process=True)
