@@ -144,7 +144,7 @@ if __name__ == "__main__":
         , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo",
                            "collection": "List" + current_date}
               # , "proxies": HttpProxy.getProxy()
-        , "proxies": []
+        , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
         , "log_config": {"level": logging.INFO,"filename": sys.argv[0] + '.logging', "filemode":'a',
                          "format": '%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
         , "headers": {"Connection": "close",

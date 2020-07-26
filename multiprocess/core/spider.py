@@ -152,7 +152,8 @@ class SpiderManger(object):
                     result = self.parse_item(content, seed)
                     if result:
                         if isinstance(result, list):
-                            result = list(map(lambda x : dict(list(x.items())+[("_status",0),("_seed",seed.value)]),result))
+                            result = list(map(lambda x: dict(list(x.items()) + [("_status", 0), ("_seed",seed.value)]),
+                                              result))
                             return result
                         else:
                             result.update({"_status":0,"_seed":seed.value})

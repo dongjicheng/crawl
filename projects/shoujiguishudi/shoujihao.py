@@ -44,12 +44,12 @@ if __name__ == "__main__":
               , "complete_timeout": 1*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
-              , "write_seed" : True
+              , "write_seed": True
               , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng", "collection": "shoujiguishudi"}
-              , "proxies": HttpProxy.getProxy()
+              , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close"}}
+              , "headers": {"Connection": "close"}}
     #from multiprocess.config import default_config
     #p = Phone(**default_config.config)
     p = Phone(**config)
