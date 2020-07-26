@@ -18,10 +18,8 @@ import ctypes
 import threading
 import time
 from fake_useragent import UserAgent
-if sys.version_info >= (3, 0):
-    from collections import UserDict
-else:
-    from UserDict import UserDict
+
+from collections import UserDict
 
 
 class RequestSpiderError(Exception):
@@ -196,7 +194,7 @@ class SpiderManger(object):
 
     def main_loop(self, show_process=True):
         if show_process:
-            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete, bar_name="爬取进度")
+            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete, bar_name="进度")
             m.start()
         for p in self.spider_list:
             p.daemon = True
