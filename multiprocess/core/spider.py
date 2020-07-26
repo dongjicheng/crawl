@@ -70,14 +70,14 @@ class ThreadMonitor(threading.Thread):
 
 
 class SpiderManger(object):
-    def __init__(self, spider_num, mongo_config, completetimeout=5*60, retries=3,
+    def __init__(self, spider_num, mongo_config, complete_timeout=5*60, retries=3,
                  job_name=None, proxies=None, log_config=None, request_timeout=3, headers=None,
                  sleep_interval=-1, requet_retries=3, rest_time=0.1, write_seed=True):
         self.rest_time = rest_time
         self.requet_retries = requet_retries
         self.sleep_interval = sleep_interval
         self.request_timeout = request_timeout
-        self.completetimeout = completetimeout
+        self.complete_timeout = complete_timeout
         self.ua = UserAgent()
         self.headers = headers
         self.job_name = job_name
@@ -167,7 +167,7 @@ class SpiderManger(object):
         self.db_collect = client[self.mongo_config["db"]][self.mongo_config["collection"]]
         while True:
             try:
-                seed = self.seeds_queue.get(timeout=self.completetimeout)
+                seed = self.seeds_queue.get(timeout=self.complete_timeout)
                 self.progress_increase()
                 if self.sleep_interval != -1:
                     time.sleep(self.sleep_interval)

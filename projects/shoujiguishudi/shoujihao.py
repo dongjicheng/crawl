@@ -41,7 +41,7 @@ if __name__ == "__main__":
               , "spider_num": 23
               , "retries": 3
               , "request_timeout": 10
-              , "completetimeout": 1*60
+              , "complete_timeout": 1*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
               , "write_seed" : True
