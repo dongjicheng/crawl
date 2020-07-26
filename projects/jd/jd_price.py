@@ -65,7 +65,10 @@ class JDPrice(SpiderManger):
                         info = str(info) + '\t' + str(sale[0])
                     info = info.lstrip("\t")
                     result.append({"values": info})
-        return result
+        if result:
+            return result
+        else:
+            return [{"seed" : seed.value}]
 
 
 if __name__ == "__main__":
