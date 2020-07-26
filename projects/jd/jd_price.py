@@ -79,6 +79,7 @@ if __name__ == "__main__":
               , "completetimeout": 5*60
               , "sleep_interval": 0.5
               , "rest_time": 5
+              , "write_seed" : False
               , "seeds_file": "resource/month202006"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))

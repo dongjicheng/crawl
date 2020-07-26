@@ -74,7 +74,7 @@ class ThreadMonitor(threading.Thread):
 class SpiderManger(object):
     def __init__(self, spider_num, mongo_config, completetimeout=5*60, retries=3,
                  job_name=None, proxies=None, log_config=None, request_timeout=3, headers=None,
-                 sleep_interval=-1, requet_retries=3, rest_time=0.1):
+                 sleep_interval=-1, requet_retries=3, rest_time=0.1, write_seed=True):
         self.rest_time = rest_time
         self.requet_retries = requet_retries
         self.sleep_interval = sleep_interval
@@ -94,6 +94,8 @@ class SpiderManger(object):
         logging.basicConfig(**log_config)
         self.log = logging
         self.log.info("output_db_collection: " + self.mongo_config["db"] + ","+ self.mongo_config["collection"])
+        self.db_collect = None
+        self._write_seed = write_seed
         for i in range(self.spider_num):
             self.spider_list.append(Process(target=self.run, name="Spider-" + str(i)))
 
@@ -164,7 +166,7 @@ class SpiderManger(object):
 
     def run(self):
         client = pymongo.MongoClient(self.mongo_config["addr"])
-        mongo_collcetion = client[self.mongo_config["db"]][self.mongo_config["collection"]]
+        self.db_collect = client[self.mongo_config["db"]][self.mongo_config["collection"]]
         while True:
             try:
                 seed = self.seeds_queue.get(timeout=self.completetimeout)
@@ -181,11 +183,16 @@ class SpiderManger(object):
                 continue
             try:
                 if documents and documents[0]["_status"] != 3:
-                    mongo_collcetion.insert_many(documents)
+                    self.write(documents, self._write_seed)
             except Exception as e:
                 self.log.info("insert db error, continue! " + str(e))
                 continue
         client.close()
+
+    def write(self, documents, write_seed=True, seed_name="_seed"):
+        if write_seed and seed_name:
+            [document.pop(seed_name) for document in documents]
+        self.db_collect.insert_many(documents)
 
     def main_loop(self, show_process=True):
         if show_process:

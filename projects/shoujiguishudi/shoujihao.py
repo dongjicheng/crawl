@@ -44,6 +44,7 @@ if __name__ == "__main__":
               , "completetimeout": 1*60
               , "sleep_interval": 0.5
               , "rest_time": 0.5
+              , "write_seed" : True
               , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng", "collection": "shoujiguishudi"}
               , "proxies": HttpProxy.getProxy()
