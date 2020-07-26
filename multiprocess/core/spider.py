@@ -5,7 +5,7 @@ import sys
 import requests
 import json
 import random
-from multiprocessing import Process, Value, Queue
+from multiprocessing import Process, Value, Queue,Manager,Lock
 import re
 import chardet
 import os
@@ -49,20 +49,22 @@ class Seed(object):
 
 
 class ThreadMonitor(threading.Thread):
-    def __init__(self, total, comlete, interval=1, bar_name=None):
+    def __init__(self, total, comlete, lock, interval=1, bar_name=None, ):
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.total = total
         self.comlete = comlete
         self.interval = interval
         self.bar_name = bar_name
+        self.lock = lock
 
     def run(self):
         with tqdm(total=self.total, desc=self.bar_name) as pbar:
             last_size = 0
             while True:
                 end = time.time() + self.interval
-                current_size = self.comlete.value
+                with self.lock:
+                    current_size = self.comlete.value
                 pbar.update(current_size - last_size)
                 if time.time() < end:
                     time.sleep(end - time.time())
@@ -84,6 +86,7 @@ class SpiderManger(object):
         self.seeds_queue = Queue()
         self.seeds_queue.cancel_join_thread()
         self.comlete = Value(ctypes.c_int, 0)
+        self.lock = Lock()
         self.proxy = proxies
         self.spider_num = spider_num
         self.spider_list = []
@@ -98,10 +101,12 @@ class SpiderManger(object):
             self.spider_list.append(Process(target=self.run, name="Spider-" + str(i)))
 
     def progress_increase(self):
-        self.comlete.value += 1
+        with self.lock:
+            self.comlete.value += 1
 
     def progress_decrease(self):
-        self.comlete.value -= 1
+        with self.lock:
+            self.comlete.value -= 1
 
     def get_request(self, request_url, encoding=None):
         headers = {"User-Agent": self.ua.chrome}
@@ -195,10 +200,9 @@ class SpiderManger(object):
 
     def main_loop(self, show_process=True):
         if show_process:
-            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete, bar_name="进度")
+            m = ThreadMonitor(self.seeds_queue.qsize(), self.comlete, lock=self.lock, bar_name="进度")
             m.start()
         for p in self.spider_list:
-            p.daemon = True
             p.start()
         for p in self.spider_list:
             p.join()
