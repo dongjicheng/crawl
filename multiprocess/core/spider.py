@@ -190,7 +190,7 @@ class SpiderManger(object):
         client.close()
 
     def write(self, documents, write_seed=True, seed_name="_seed"):
-        if write_seed and seed_name:
+        if not write_seed and seed_name:
             [document.pop(seed_name) for document in documents]
         self.db_collect.insert_many(documents)
 
