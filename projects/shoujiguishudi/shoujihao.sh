@@ -1,3 +1,3 @@
 cd `dirname $0`
 source activate jicheng
-nohup python shoujihao.py >> shoujihao.py 2>&1 &
+nohup python shoujihao.py >> shoujihao.py.log 2>&1 &

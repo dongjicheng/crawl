@@ -75,11 +75,11 @@ if __name__ == "__main__":
     config = {"job_name": "jdprice"
               , "spider_num": 23
               , "retries": 3
-              , "request_timeout": 3
+              , "request_timeout": 10
               , "completetimeout": 5*60
               , "sleep_interval": 0.5
-              , "rest_time": 0.5
-              , "seeds_file": "/home/u9000/martingale/jd_month/month202006"
+              , "rest_time": 5
+              , "seeds_file": "resource/month202006"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}

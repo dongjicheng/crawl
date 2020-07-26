@@ -99,6 +99,7 @@ class SecooWeekJob(SpiderManger):
         ]
         with op.DBManger() as m:
             dic = {}
+            m.drop_db_collect(db_collect=("secoo", "CleanListOld"))
             m.rename_collection(old_db_collection=("secoo", "CleanListNew"),
                                 new_db_collection=("secoo", "CleanListOld"))
             for pid, price in m.read_from(db_collect=("secoo", "CleanListOld"), out_field=("pid", "price")):
@@ -120,6 +121,7 @@ class SecooWeekJob(SpiderManger):
         ]
         with op.DBManger() as m:
             dic = {}
+            m.drop_db_collect(db_collect=("secoo", "CleanListNew"))
             for collection in tqdm(m.list_tables("secoo", filter={"name": {"$regex": r"List20\d\d\d\d\d\d"}}),desc="init_clean_price"):
                 for pid, price in m.read_from(db_collect=("secoo", collection), out_field=("pid", "price"), pipeline=pipeline):
                     dic.update({pid: price})

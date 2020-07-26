@@ -157,6 +157,8 @@ class SpiderManger(object):
                         else:
                             result.update({"_status":0,"_seed":seed.value})
                             return [result]
+                    else:
+                        return [{"_status": 4,"_seed":seed.value}]
                 except Exception as e:
                     return [{"_status": 2,"_seed":seed.value}]
 
