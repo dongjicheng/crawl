@@ -93,7 +93,7 @@ class SpiderManger(object):
         import logging
         logging.basicConfig(**log_config)
         self.log = logging
-        self.log.info("output_db_collection: " + str(self.mongo_config["db"],self.mongo_config["collection"]))
+        self.log.info("output_db_collection: " + self.mongo_config["db"] + ","+ self.mongo_config["collection"])
         for i in range(self.spider_num):
             self.spider_list.append(Process(target=self.run, name="Spider-" + str(i)))
 
