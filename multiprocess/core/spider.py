@@ -191,7 +191,7 @@ class SpiderManger(object):
 
     def write(self, documents, write_seed=True, seed_name="_seed"):
         if not write_seed and seed_name:
-            [document.pop(seed_name) for document in documents]
+            [document.pop(seed_name) for document in documents if document["_status"] == 0]
         self.db_collect.insert_many(documents)
 
     def main_loop(self, show_process=True):
