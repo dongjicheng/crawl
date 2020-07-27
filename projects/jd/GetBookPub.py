@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from multiprocess.core.spider import SpiderManger, Seed
-from multiprocess.tools import process_manger
+
 import re
 import sys
-import random
-from multiprocess.tools import timeUtil,collections
+
+from multiprocess.core.spider import SpiderManger, Seed
+from multiprocess.tools import process_manger
+from multiprocess.tools import timeUtil, collections
 
 
 class JDPrice(SpiderManger):
@@ -22,35 +23,23 @@ class JDPrice(SpiderManger):
         self.pattern = re.compile(r'"id":.*?"name":".*?"')
 
     def make_request_url(self, seed):
-        price_address = "http://p.3.cn/prices/mgets?&type=1&skuIds=J_" + seed.value + '&pduid=' + self.usrid
-        return price_address
+        cats = re.split(',', seed)
+        format_value = (seed.value, 2, "pub") if cats[0] == '1713' else (seed.value, 1, "brand")
+        return 'http://list.jd.com/list.html?cat={0}&trans=1&md={1}&my=list_{2}'.format(*format_value)
 
     def parse_item(self, content, seed):
-        blocks = self.block_pattern.findall(content)
         result = []
-        for i in blocks:
-            p1s = self.p1.findall(i)
-            if len(p1s) > 0:
-                lines = re.split(',', p1s[0])
-                if len(lines) >= 2:
-                    id1 = self.p_pattern.findall(lines[0])[0]
-                    info = ""
-                    for j in lines:
-                        up = self.up_pattern.findall(j)
-                        if up != []:
-                            sale = [-1]
-                        else:
-                            sale = self.p2_pattern.findall(j)
-
-                            if sale == []:
-                                sale = self.p_pattern.findall(j)
-                        info = str(info) + '\t' + str(sale[0])
-                    info = info.lstrip("\t")
-                    result.append({"values": info})
-        if result:
-            return result
+        tuples = self.pattern.findall(content)
+        if len(tuples) > 0:
+            for item in tuples:
+                itemid_ = re.findall(r'"id":\d+', item)[0]
+                itemid = itemid_[5:len(itemid_)]
+                name_ = re.findall(r'"name":".*?"', item)[0]
+                name = name_[8:len(name_) - 1].strip(' ')
+                result.append({"brand_id": itemid, "name": name})
         else:
-            return [{"seed" : seed.value}]
+            result.append({"seed": seed.value})
+        return result
 
 
 if __name__ == "__main__":
@@ -66,7 +55,8 @@ if __name__ == "__main__":
               , "rest_time": 5
               , "write_seed" : False
               , "seeds_file": "resource/newCateName"
-              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "brand"+current_date}
+              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong",
+                                 "collection": "brand" + current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
