@@ -34,7 +34,7 @@ class SecooMonthJob(SpiderManger):
         self.user_pattern = re.compile(r'userName":".*?"')
         self.device_pattern = re.compile(r'sourceDevice":".*?"')
 
-    def make_requset_url(self, seed):
+    def make_request_url(self, seed):
         url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page=1' \
               '&pageSize=10&productBrandId=&productCategoryId=&productId={0}&type=0&callback=jsonp1'
         return url.format(seed.value[0])

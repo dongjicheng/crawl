@@ -23,7 +23,7 @@ class Phone(SpiderManger):
         self.pro_city_pattern = re.compile(r'<dd><span>号码归属地：</span>(.*?) (.*?)</dd>')
         self.telcompany_pattern = re.compile(r'<dd><span>手机卡类型：</span>(.*?)</dd>')
 
-    def make_requset_url(self, seed):
+    def make_request_url(self, seed):
         return "http://shouji.xpcha.com/{0}.html".format(seed.value)
 
     def parse_item(self, content, seed):

@@ -37,7 +37,7 @@ class SecooWeekJob(SpiderManger):
                     self.seeds_queue.put(Seed((pageindex, r[0], r[1]), kwargs["retries"]))
             else:
                 self.log.info((0, r[0], r[1]))
-    def make_requset_url(self, seed):
+    def make_request_url(self, seed):
         return "http://list.secoo.com/all/0-0-0-0-0-7-0-0-{0}-10-{1}_{2}-0-100-0.shtml".format(*seed.value)
 
     def parse_item(self, content, seed):

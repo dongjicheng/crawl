@@ -133,14 +133,14 @@ class SpiderManger(object):
             self.log.info(f)
             return ""
 
-    def make_requset_url(self, seed):
+    def make_request_url(self, seed):
         raise NotImplementedError
 
     def parse_item(self, content, seed):
         raise NotImplementedError
 
     def process(self, seed):
-        url = self.make_requset_url(seed)
+        url = self.make_request_url(seed)
         if url:
             content = self.get_request(url)
             if content == "":
