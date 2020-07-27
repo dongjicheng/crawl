@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import random
 
 class Dict(dict):
     __setattr__ = dict.__setitem__
@@ -14,6 +14,22 @@ def dict_to_object(dictObj):
     for k, v in dictObj.items():
         inst[k] = dict_to_object(v)
     return inst
+
+
+def shuffle(iterable, buffer_size=512):
+    buffer = []
+    for i, v in enumerate(iterable):
+        if i % buffer_size == 0:
+            random.shuffle(buffer)
+            for item in buffer:
+                yield item
+            buffer = [v]
+        else:
+            buffer.append(v)
+    if buffer:
+        random.shuffle(buffer)
+        for item in buffer:
+            yield item
 
 
 if __name__ == "__main__":
