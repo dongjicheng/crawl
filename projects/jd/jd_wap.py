@@ -46,8 +46,8 @@ class GetComment(SpiderManger):
             result.append({"skuid": seed.value, "comment": "0"})
         else:
             result.append({"skuid": seed.value, "comment": str(count[0])})
-        r = (0.1563 + random.random() / 10)
-        time.sleep(r)
+        #r = (0.1563 + random.random() / 10)
+        #time.sleep(r)
         if result:
             return result
         else:
