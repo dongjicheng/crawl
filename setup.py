@@ -8,5 +8,5 @@ setup(name="jichengspider",
       author="jicheng",
       author_email="421798321@qq.com",
       url="https://github.com/dongjicheng/crawl",
-      packages=find_packages(exclude=["immomo", "bin", "projects", "test"], install_requires=['requests','tqdm'])
+      packages=find_packages(exclude=["immomo", "bin", "projects", "test"])
       )
