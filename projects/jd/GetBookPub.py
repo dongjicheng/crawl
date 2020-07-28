@@ -23,7 +23,7 @@ class JDPrice(SpiderManger):
         self.pattern = re.compile(r'"id":.*?"name":".*?"')
 
     def make_request_url(self, seed):
-        cats = re.split(',', seed)
+        cats = re.split(',', seed.value)
         format_value = (seed.value, 2, "pub") if cats[0] == '1713' else (seed.value, 1, "brand")
         return 'http://list.jd.com/list.html?cat={0}&trans=1&md={1}&my=list_{2}'.format(*format_value)
 
@@ -46,19 +46,19 @@ if __name__ == "__main__":
     current_date = timeUtil.current_time()
     process_manger.kill_old_process(sys.argv[0])
     import logging
-    config = {"job_name": "jdprice"
+    config = {"job_name": "jdbrand"
               , "spider_num": 23
               , "retries": 3
               , "request_timeout": 10
               , "complete_timeout": 5*60
               , "sleep_interval": 0.5
               , "rest_time": 5
-              , "write_seed" : False
+              , "write_seed": False
               , "seeds_file": "resource/newCateName"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong",
                                  "collection": "brand" + current_date}
               , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close"}}
+              , "headers":{"Connection": "close"}}
     p = JDPrice(**config)
     p.main_loop(show_process=True)
