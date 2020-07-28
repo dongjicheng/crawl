@@ -10,12 +10,14 @@ from multiprocess.tools import process_manger
 from multiprocess.tools import timeUtil, collections
 from random import random
 import time
+from fake_useragent import UserAgent
 
 
 class GetComment(SpiderManger):
     def __init__(self, seeds_file, dateindex, **kwargs):
         super(GetComment, self).__init__(**kwargs)
-
+        self.proxies = list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
         with open(seeds_file) as infile:
             data_set = collections.DataSet(infile)
             for i, seed in enumerate(data_set.map(lambda line: line.strip('\n').split("\t")[0])
@@ -28,7 +30,6 @@ class GetComment(SpiderManger):
         url = 'https://wq.jd.com/commodity/comment/getcommentlist?' \
               'callback=skuJDEvalB&pagesize=10&sceneval=2&' \
               'skucomment=1&score=0&sku={}&sorttype=5&page=1'.format(seed.value)
-        #{"User-Agent":self.ua.chrome}
         request={"url": url,
          "proxies":{"http": random.choice(self.proxies)},
          "headers":{

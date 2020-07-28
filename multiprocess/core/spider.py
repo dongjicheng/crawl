@@ -123,7 +123,7 @@ class SpiderManger(object):
             else:
                 r.raise_for_status()
         except Exception as f:
-            self.log.info(f)
+            self.log.exception(f)
             return ""
 
     def make_request(self, seed):
@@ -176,13 +176,13 @@ class SpiderManger(object):
             try:
                 documents = self.process(seed)
             except Exception as e:
-                self.log.info("parse error, continue! " + str(e))
+                self.log.exception(e)
                 continue
             try:
                 if documents and documents[0]["_status"] != 3:
                     self.write(documents, self._write_seed)
             except Exception as e:
-                self.log.info("insert db error, continue! " + str(e))
+                self.log.exception(e)
                 continue
         client.close()
 
