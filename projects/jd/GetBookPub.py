@@ -22,6 +22,39 @@ class GetBrands(SpiderManger):
             for i, seed in enumerate(data_set.map(lambda line: line.strip('\n').split("\t")[0].replace('-', ','))
                                              .shuffle(1024)):
                 self.seeds_queue.put(Seed(seed, kwargs["retries"]))
+        self.pattern = re.compile(r'<li id="brand-(\d+)[\s\S]*?品牌::([\s\S]*?)\'\)"')
+
+    def make_request(self, seed):
+        cats = re.split(',', seed.value)
+        format_value = (seed.value, 2, "pub") if cats[0] == '1713' else (seed.value, 1, "brand")
+        url = 'http://list.jd.com/list.html?cat={0}&trans=1&md={1}&my=list_{2}'.format(*format_value)
+        request = {"url": url,
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection": "close", "User-Agent": self.ua.chrome}}
+        return request
+
+    def parse_item(self, content, seed):
+        result = []
+        tuples = self.pattern.findall(content)
+        if len(tuples) > 0:
+            for item in tuples:
+                result.append({"brand_id": item[0], "name": item[1], "cate_id":seed.value})
+        if result:
+            return result
+        else:
+            return [{"cate_id":seed.value}]
+
+
+class GetBrands1(SpiderManger):
+    def __init__(self, seeds_file, **kwargs):
+        super(GetBrands1, self).__init__(**kwargs)
+        self.proxies = list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
+        with open(seeds_file) as infile:
+            data_set = collections.DataSet(infile)
+            for i, seed in enumerate(data_set.map(lambda line: line.strip('\n').split("\t")[0].replace('-', ','))
+                                             .shuffle(1024)):
+                self.seeds_queue.put(Seed(seed, kwargs["retries"]))
         self.pattern = re.compile(r'"id":.*?"name":".*?"')
 
     def make_request(self, seed):

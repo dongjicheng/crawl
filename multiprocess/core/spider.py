@@ -105,10 +105,11 @@ class SpiderManger(object):
         with self.lock:
             self.comlete.value -= 1
 
-    def get_request(self, request, encoding=None):
+    def get_request(self, request):
         request_url = request.get("url")
         headers = request.get("headers")
         proxies = request.get("proxies")
+        encoding = request.get("encoding")
         s = requests.Session()
         s.mount('http://', HTTPAdapter(max_retries=self.requet_retries))
         s.mount('https://', HTTPAdapter(max_retries=self.requet_retries))
