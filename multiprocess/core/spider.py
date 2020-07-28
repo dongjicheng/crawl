@@ -110,12 +110,23 @@ class SpiderManger(object):
         headers = request.get("headers")
         proxies = request.get("proxies")
         encoding = request.get("encoding")
+        mothed = request.get("mothed")
+        data = request.get("data")
+        json = request.get("json")
         s = requests.Session()
         s.mount('http://', HTTPAdapter(max_retries=self.requet_retries))
         s.mount('https://', HTTPAdapter(max_retries=self.requet_retries))
         try:
-            r = s.get(url=request_url,
-                         headers=headers, proxies=proxies, timeout=self.request_timeout)
+            if mothed:
+                if mothed.lower() == "get":
+                    r = s.get(url=request_url,
+                              headers=headers, proxies=proxies, timeout=self.request_timeout)
+                elif mothed.lower() == "post":
+                    r = s.post(url=request_url, data=data, json=json,
+                              headers=headers, proxies=proxies, timeout=self.request_timeout)
+            else:
+                r = s.get(url=request_url,
+                             headers=headers, proxies=proxies, timeout=self.request_timeout)
             if r.status_code == requests.codes.ok:
                 if encoding is None:
                     encoding = chardet.detect(r.content)['encoding']
@@ -170,7 +181,7 @@ class SpiderManger(object):
                 seed = self.seeds_queue.get(timeout=self.complete_timeout)
                 self.progress_increase()
                 if self.sleep_interval != -1:
-                    time.sleep(self.sleep_interval)
+                    time.sleep(self.sleep_interval + random.random() / 10)
             except Exception as e:
                 self.log.info("job done !")
                 break
