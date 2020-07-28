@@ -17,7 +17,7 @@ from tqdm import tqdm
 import ctypes
 import threading
 import time
-from fake_useragent import UserAgent
+
 
 from collections import UserDict
 
@@ -73,21 +73,18 @@ class ThreadMonitor(threading.Thread):
 
 class SpiderManger(object):
     def __init__(self, spider_num, mongo_config, complete_timeout=5*60, retries=3,
-                 job_name=None, proxies=None, log_config=None, request_timeout=3, headers=None,
+                 job_name=None, log_config=None, request_timeout=3,
                  sleep_interval=-1, requet_retries=3, rest_time=0.1, write_seed=True):
         self.rest_time = rest_time
         self.requet_retries = requet_retries
         self.sleep_interval = sleep_interval
         self.request_timeout = request_timeout
         self.complete_timeout = complete_timeout
-        self.ua = UserAgent()
-        self.headers = headers
         self.job_name = job_name
         self.seeds_queue = Queue()
         self.seeds_queue.cancel_join_thread()
         self.comlete = Value(ctypes.c_int, 0)
         self.lock = Lock()
-        self.proxy = proxies
         self.spider_num = spider_num
         self.spider_list = []
         self.mongo_config = mongo_config
@@ -108,20 +105,16 @@ class SpiderManger(object):
         with self.lock:
             self.comlete.value -= 1
 
-    def get_request(self, request_url, encoding=None):
-        headers = {"User-Agent": self.ua.chrome}
-        if self.headers:
-            headers.update(self.headers)
+    def get_request(self, request, encoding=None):
+        request_url = request.get("url")
+        headers = request.get("headers")
+        proxies = request.get("proxies")
         s = requests.Session()
         s.mount('http://', HTTPAdapter(max_retries=self.requet_retries))
         s.mount('https://', HTTPAdapter(max_retries=self.requet_retries))
         try:
-            if self.proxy:
-                r = s.get(url=request_url,
-                             headers=headers, proxies={"http": random.choice(self.proxy)}, timeout=self.request_timeout)
-            else:
-                r = s.get(url=request_url,
-                             headers=headers, timeout=self.request_timeout)
+            r = s.get(url=request_url,
+                         headers=headers, proxies=proxies, timeout=self.request_timeout)
             if r.status_code == requests.codes.ok:
                 if encoding is None:
                     encoding = chardet.detect(r.content)['encoding']
@@ -133,16 +126,16 @@ class SpiderManger(object):
             self.log.info(f)
             return ""
 
-    def make_request_url(self, seed):
+    def make_request(self, seed):
         raise NotImplementedError
 
     def parse_item(self, content, seed):
         raise NotImplementedError
 
     def process(self, seed):
-        url = self.make_request_url(seed)
-        if url:
-            content = self.get_request(url)
+        request_dict = self.make_request(seed)
+        if request_dict:
+            content = self.get_request(request_dict)
             if content == "":
                 seed.retries = seed.retries - 1
                 if seed.retries > 0:

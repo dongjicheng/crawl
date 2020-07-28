@@ -12,11 +12,14 @@ import sys
 from datetime import datetime
 from multiprocess.tools import timeUtil
 import numpy as np
-
+import random
+from fake_useragent import UserAgent
 
 class SecooWeekJob(SpiderManger):
     def __init__(self, current_date, **kwargs):
         super(SecooWeekJob, self).__init__(**kwargs)
+        self.proxies = list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
         self.current_date = current_date
         space = np.linspace(0, 5800000, kwargs["spider_num"] + 1)
         ranges = [(int(space[i]), int(space[i + 1])) for i in range(len(space) - 1)]
@@ -37,8 +40,15 @@ class SecooWeekJob(SpiderManger):
                     self.seeds_queue.put(Seed((pageindex, r[0], r[1]), kwargs["retries"]))
             else:
                 self.log.info((0, r[0], r[1]))
-    def make_request_url(self, seed):
-        return "http://list.secoo.com/all/0-0-0-0-0-7-0-0-{0}-10-{1}_{2}-0-100-0.shtml".format(*seed.value)
+
+    def make_request(self, seed):
+        url = "http://list.secoo.com/all/0-0-0-0-0-7-0-0-{0}-10-{1}_{2}-0-100-0.shtml".format(*seed.value)
+        request = {"url": url,
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection": "close",
+                               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}
+                   }
+        return request
 
     def parse_item(self, content, seed):
         try:
@@ -143,12 +153,9 @@ if __name__ == "__main__":
         , "write_seed" : True
         , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo",
                            "collection": "List" + current_date}
-              # , "proxies": HttpProxy.getProxy()
-        , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
         , "log_config": {"level": logging.INFO,"filename": sys.argv[0] + '.logging', "filemode":'a',
                          "format": '%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-        , "headers": {"Connection": "close",
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
+        }
     p = SecooWeekJob(current_date, **config)
     p.main_loop(show_process=True)
     p.clean_price()

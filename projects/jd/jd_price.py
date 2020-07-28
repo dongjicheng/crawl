@@ -7,11 +7,14 @@ import re
 import sys
 import random
 from multiprocess.tools import timeUtil
+from fake_useragent import UserAgent
 
 
 class JDPrice(SpiderManger):
     def __init__(self, seeds_file, **kwargs):
         super(JDPrice, self).__init__(**kwargs)
+        self.proxies = list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
         with open(seeds_file) as infile:
             for i, seed in enumerate(infile):
                 current = seed.strip('\n').split("\t")[0]
@@ -38,9 +41,12 @@ class JDPrice(SpiderManger):
         self.usrid = str(self.rid)
         self.up_pattern = re.compile('"up":"tpp"')
 
-    def make_request_url(self, seed):
+    def make_request(self, seed):
         price_address = "http://p.3.cn/prices/mgets?&type=1&skuIds=J_" + seed.value + '&pduid=' + self.usrid
-        return price_address
+        request = {"url": price_address,
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection":"close", "User-Agent": self.ua.chrome}}
+        return request
 
     def parse_item(self, content, seed):
         blocks = self.block_pattern.findall(content)
@@ -84,8 +90,7 @@ if __name__ == "__main__":
               , "write_seed" : False
               , "seeds_file": "resource/month202006"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong", "collection": "jdprice"+current_date}
-              , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close"}}
+              }
     p = JDPrice(**config)
     p.main_loop(show_process=True)

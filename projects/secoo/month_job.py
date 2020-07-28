@@ -12,11 +12,16 @@ from tqdm import tqdm
 import time
 from datetime import date
 import json
+import random
+from fake_useragent import UserAgent
 
 
 class SecooMonthJob(SpiderManger):
     def __init__(self, current_date, **kwargs):
         super(SecooMonthJob, self).__init__(**kwargs)
+        self.proxies = list(map(lambda x: ("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
+        self.current_date = current_date
         self.current_date = current_date
         with op.DBManger() as m:
             total = m.count(db_collect=("secoo", "CleanListNew"))
@@ -34,10 +39,13 @@ class SecooMonthJob(SpiderManger):
         self.user_pattern = re.compile(r'userName":".*?"')
         self.device_pattern = re.compile(r'sourceDevice":".*?"')
 
-    def make_request_url(self, seed):
+    def make_request(self, seed):
         url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page=1' \
-              '&pageSize=10&productBrandId=&productCategoryId=&productId={0}&type=0&callback=jsonp1'
-        return url.format(seed.value[0])
+              '&pageSize=10&productBrandId=&productCategoryId=&productId={0}&type=0&callback=jsonp1'.format(seed.value[0])
+        request = {"url": url,
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection": "close", "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
+        return request
 
     def parse_item(self, content, seed):
         pid, price = seed.value
@@ -107,6 +115,8 @@ class SecooMonthJob(SpiderManger):
 class SecooMonthJob1(SpiderManger):
     def __init__(self, current_date, **kwargs):
         super(SecooMonthJob1, self).__init__(**kwargs)
+        self.proxies = list(map(lambda x: ("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.ua = UserAgent()
         self.current_date = current_date
         with op.DBManger() as m:
             total = m.count(db_collect=("secoo", "CleanListNew"))
@@ -123,15 +133,22 @@ class SecooMonthJob1(SpiderManger):
         self.user_pattern = re.compile(r'userName":".*?"')
         self.device_pattern = re.compile(r'sourceDevice":".*?"')
 
-    def make_requset_url(self, seed):
+    def make_requset(self, seed):
+        request = {
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection": "close",
+                               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}
+                   }
         if seed.type == 0:
             url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page=1' \
-                  '&pageSize=10&productBrandId=&productCategoryId=&productId={0}&type=0&callback=jsonp1'
-            return url.format(seed.value[0])
+                  '&pageSize=10&productBrandId=&productCategoryId=&productId={0}&type=0&callback=jsonp1'.format(seed.value[0])
+            request["url"] = url
+            return request
         elif seed.type == 1:
             url = 'https://las.secoo.com/api/comment/show_product_comment?filter=0&page={0}' \
-                  '&pageSize=10&productBrandId=&productCategoryId=&productId={1}&type=0&callback=jsonp1'
-            return url.format(seed.value[2],seed.value[0])
+                  '&pageSize=10&productBrandId=&productCategoryId=&productId={1}&type=0&callback=jsonp1'.format(seed.value[2],seed.value[0])
+            request["url"] = url
+            return request
 
     def parse_item(self, content, seed):
         if seed.type == 0:
@@ -218,9 +235,7 @@ if __name__ == "__main__":
               , "rest_time": 15
               , "write_seed" : True
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "secoo", "collection": "secoComment" + current_date}
-              #, "proxies": HttpProxy.getProxy()
-              , "proxies": list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
               , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a',"format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
-              , "headers":{"Connection":"close",'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}}
+              }
     p = SecooMonthJob(current_date, **config)
     p.main_loop(show_process=True)
