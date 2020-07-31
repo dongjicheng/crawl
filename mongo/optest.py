@@ -14,10 +14,8 @@ pipeline = [
 ]
 
 with op.DBManger() as m:
-    for p in m.read_from(db_collect=("secoo","CleanListNew"),out_field=("pid",)):
-        print(p)
+    print(m.get_lasted_collection("jingdong", filter={"name": {"$regex": r"^comment20200728$"}}))
+
 
 def aaa():
     pass
-
-print(aaa())

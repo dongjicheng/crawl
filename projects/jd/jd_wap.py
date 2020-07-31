@@ -12,6 +12,8 @@ import random
 import time
 from fake_useragent import UserAgent
 
+from multiprocess.core import HttpProxy
+
 
 class GetComment(SpiderManger):
     def __init__(self, seeds_file, dateindex, **kwargs):
@@ -28,12 +30,12 @@ class GetComment(SpiderManger):
 
     def make_request(self, seed):
         url = "https://club.jd.com/comment/skuProductPageComments.action?callback=fetchJSON_comment98&productId={0}&score=0&sortType=5&page=0&pageSize=10&isShadowSku=0&fold=1".format(seed.value)
-        request={"url": url,
+        request={"url": url,"encoding":"gbk",
          "method":"get",
-         "proxies":{"http": random.choice(self.proxies)},
+         "proxies":{"http": random.choice(HttpProxy.getHttpProxy()),"https":random.choice(HttpProxy.getHttpsProxy())},
          "headers":{
          'Host': 'club.jd.com',
-         'Connection': 'keep-alive',
+         'Connection': 'close',
          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
          'Referer': 'https://item.jd.com/{0}.html'.format(seed.value)
         }}
@@ -97,6 +99,47 @@ class GetComment1(SpiderManger):
             return [{"seed": seed.value}]
 
 
+class GetComment2(SpiderManger):
+    def __init__(self, seeds_file, dateindex, **kwargs):
+        super(GetComment2, self).__init__(**kwargs)
+        self.ua = UserAgent()
+        with open(seeds_file) as infile:
+            data_set = collections.DataSet(infile)
+            for i, seed in enumerate(data_set.map(lambda line: line.strip('\n').split("\t")[0])
+                                             .shuffle(2048)):
+                self.seeds_queue.put(Seed(seed, kwargs["retries"]))
+        self.allcnt_pattern = re.compile(r'"commentCount":(\d+),')
+        self.dateindex = dateindex
+
+    def make_request(self, seed):
+        url = "https://club.jd.com/comment/skuProductPageComments.action?callback=fetchJSON_comment98&productId={0}&score=0&sortType=5&page=0&pageSize=10&isShadowSku=0&fold=1".format(seed.value)
+        request={"url": url,
+         "encoding":"utf-8",
+         "method":"get",
+         "proxy": self.used_proxy,
+         "headers":{
+         'Host': 'club.jd.com',
+         'Connection': 'close',
+         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
+         'Referer': 'https://item.jd.com/{0}.html'.format(seed.value)
+        }}
+        return request
+
+    def parse_item(self, content, seed):
+        result = []
+        count = self.allcnt_pattern.findall(content)
+        if not count:
+            result.append({"skuid": seed.value, "comment": "0"})
+        else:
+            result.append({"skuid": seed.value, "comment": str(count[0])})
+        #r = (0.1563 + random.random() / 10)
+        #time.sleep(r)
+        if result:
+            return result
+        else:
+            return [{"seed": seed.value}]
+
+
 if __name__ == "__main__":
     current_date = timeUtil.current_time()
     process_manger.kill_old_process(sys.argv[0])
@@ -106,14 +149,34 @@ if __name__ == "__main__":
               , "retries": 3
               , "request_timeout": 5
               , "complete_timeout": 5*60
-              , "sleep_interval": -1
+              , "sleep_interval": 0
               , "rest_time": 5
               , "write_seed": False
               , "seeds_file": "resource/month202006"
               , "dateindex": current_date
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jingdong",
                                  "collection": "comment" + current_date}
-              , "log_config": {"level": logging.INFO, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
+              , "log_config": {"level": logging.ERROR, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               }
-    p = GetComment(**config)
+    #p = GetComment(**config)
+    #p.main_loop(show_process=True)
+    import pycurl
+    new_config = {"job_name": "jdcomment"
+              , "spider_num": 23
+              , "use_new_download_api": True
+              , "retries": 3
+              , "pycurl_config": {pycurl.CONNECTTIMEOUT: 2, pycurl.TIMEOUT: 10}
+              , "complete_timeout": 5*60
+              , "sleep_interval": 0
+              , "rest_time": 5
+              , "write_seed": False
+              , "seeds_file": "resource/month202006"
+              , "dateindex": current_date
+              , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng",
+                                 "collection": "comment" + current_date}
+              , "log_config": {"level": logging.ERROR, "filename": sys.argv[0] + '.logging', "filemode":'a', "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
+              , "proxies_pool": HttpProxy.getHttpProxy()
+              , "use_proxy": True
+              }
+    p = GetComment2(**new_config)
     p.main_loop(show_process=True)

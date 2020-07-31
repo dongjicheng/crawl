@@ -23,6 +23,11 @@ class DBManger(object):
         db = self.client[dbname]
         return db.list_collection_names(filter=filter)
 
+    def get_lasted_collection(self, dbname, filter):
+        # filter = {"name": {"$regex": r"^(?!system\\.)"}}
+        collect_list = self.list_tables(dbname, filter)
+        return sorted(collect_list)[-1]
+
     def close(self):
         self.client.close()
 

@@ -40,8 +40,21 @@ class DataSet(object):
         self.iterable_list.append(apply(iter))
         return self
 
+    def distinct(self):
+        iter = self.iterable_list[-1]
+
+        def apply(iter):
+            buffer = set()
+            for i, v in enumerate(iter):
+                buffer.add(v)
+            for item in buffer:
+                yield item
+        self.iterable_list.append(apply(iter))
+        return self
+
     def map(self, function):
         iter = self.iterable_list[-1]
+
         def apply(iter):
             for i in iter:
                 yield function(i)

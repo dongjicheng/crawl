@@ -9,6 +9,6 @@ config = {"job_name": "shoujiguishudi"
               , "completetimeout": 5*60
               , "seeds_file": "resource/buyer_phone.3"
               , "mongo_config": {"addr": "mongodb://192.168.0.13:27017", "db": "jicheng"}
-              , "proxies": HttpProxy.getProxy()
+              , "proxies": HttpProxy.getHttpProxy()
               , "log_config": {"level": logging.DEBUG, "format":'%(asctime)s - %(filename)s - %(processName)s - [line:%(lineno)d] - %(levelname)s: %(message)s'}
               , "headers":{"Connection":"close"}}
