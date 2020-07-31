@@ -1,40 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import sys
-import requests
-import json
-import random
-from multiprocessing import Process, Value, Queue,Manager,Lock
-import re
-import chardet
-import os
-import redis
-import pymongo
-import sys
-from requests.adapters import HTTPAdapter
-from tqdm import tqdm
+
 import ctypes
+import pycurl
+import random
 import threading
 import time
-import pycurl
-from io import BytesIO
 import urllib
-
-
-from collections import UserDict
-
-
-class RequestSpiderError(Exception):
-    pass
-
-
-class ParseContentError(Exception):
-    pass
-
-
-class MaxRetriesError(Exception):
-    pass
+from io import BytesIO
+from multiprocessing import Process, Value, Queue, Lock
+import chardet
+import pymongo
+import requests
+from requests.adapters import HTTPAdapter
+from tqdm import tqdm
 
 
 class SuccessResult(Exception):
@@ -42,13 +22,27 @@ class SuccessResult(Exception):
 
 
 class Seed(object):
-    def __init__(self, value, retries=3, type = None):
+    def __init__(self, value, retries=3, type = None, last_time=time.time(), rest_time=0,
+                 is_faid_task_write=True, is_ok=False):
         self.retries = retries
         self.value = value
         self.type = type
+        self.last_time = last_time
+        self.rest_time = rest_time
+        self.is_faid_task_write = is_faid_task_write
+        self.is_ok = is_ok
 
     def __str__(self):
-        return str(self.value) + "," + str(self.retries) + "," + str(self.type)
+        return str(self.value) + "," + str(self.type) + "," + str(self.is_ok)
+
+    def ok(self):
+        self.is_ok = True
+
+    def is_ok(self):
+        return self.is_ok
+
+    def retry(self):
+        self.retries = self.retries - 1
 
 
 class ThreadMonitor(threading.Thread):
@@ -75,19 +69,13 @@ class ThreadMonitor(threading.Thread):
 
 
 class SpiderManger(object):
-    def __init__(self, spider_num, mongo_config, complete_timeout=5*60, retries=3,
-                 job_name=None, log_config=None, request_timeout=3,
-                 sleep_interval=None, requet_retries=3, rest_time=None, write_seed=True, use_new_download_api=False
-                 , proxies_pool=None, pycurl_config=None, use_proxy=True):
-        self.retries = retries
+    def __init__(self, spider_num, mongo_config, complete_timeout=5*60,
+                 job_name=None, log_config=None, use_new_download_api=False
+                 , proxies_pool=None, pycurl_config=None, use_proxy=True,**kwargs):
         self.use_proxy = use_proxy
         self.pycurl_config = pycurl_config
         self.proxies_pool = proxies_pool
         self.use_new_download_api = use_new_download_api
-        self.rest_time = rest_time
-        self.requet_retries = requet_retries
-        self.sleep_interval = sleep_interval
-        self.request_timeout = request_timeout
         self.complete_timeout = complete_timeout
         self.job_name = job_name
         self.seeds_queue = Queue()
@@ -103,9 +91,25 @@ class SpiderManger(object):
         self.log.info("output_db_collection: " + self.mongo_config["db"] + ","+ self.mongo_config["collection"])
         self.db_collect = None
         self.used_proxy = None
-        self._write_seed = write_seed
         for i in range(self.spider_num):
             self.spider_list.append(Process(target=self.run, name="Spider-" + str(i)))
+
+    def fetch_task(self, timeout=None):
+        if timeout:
+            seed = self.seeds_queue.get(timeout=self.complete_timeout)
+        else:
+            seed = self.seeds_queue.get(timeout=timeout)
+        if seed.retries > 0:
+            if time.time() - seed.last_time < seed.rest_time:
+                self.seeds_queue.put(seed)
+                return None
+            else:
+                self.progress_increase()
+                return seed
+        else:
+            if seed.is_faid_task_write:
+                self.write([{"_status": 3, "_seed": seed}])
+            return None
 
     def progress_increase(self, step=1):
         with self.lock:
@@ -223,48 +227,26 @@ class SpiderManger(object):
             coding = chardet.detect(result)['encoding']
         return result.decode(coding)
 
-    def get_request(self, request):
-        request_url = request.get("url")
-        headers = request.get("headers")
-        if request.get("proxy"):
-            proxies = request.get("proxy")
-        else:
-            proxies = request.get("proxies")
-        encoding = request.get("encoding")
-        mothed = request.get("mothed")
-        data = request.get("data")
-        json = request.get("json")
-        verify = request.get("verify")
+    def do_request(self, request):
+        max_retries = request.get("max_retries", 3)
         s = requests.Session()
-        s.mount('http://', HTTPAdapter(max_retries=self.requet_retries))
-        s.mount('https://', HTTPAdapter(max_retries=self.requet_retries))
+        s.mount('http://', HTTPAdapter(max_retries=max_retries))
+        s.mount('https://', HTTPAdapter(max_retries=max_retries))
         try:
-            if mothed:
-                if mothed.lower() == "get":
-                    r = s.get(url=request_url,
-                              headers=headers, proxies=proxies, timeout=self.request_timeout,verify=verify)
-                elif mothed.lower() == "post":
-                    r = s.post(url=request_url, data=data, json=json,
-                              headers=headers, proxies=proxies, timeout=self.request_timeout, verify=verify)
-            else:
-                r = s.get(url=request_url,
-                             headers=headers, proxies=proxies, timeout=self.request_timeout, verify=verify)
-            if r.status_code == requests.codes.ok:
-                if encoding is None:
-                    encoding = chardet.detect(r.content)['encoding']
-                page = r.content.decode(encoding)
-                return page
-            else:
-                r.raise_for_status()
-        except Exception as f:
-            self.log.exception(f)
+            r = s.request(**request)
+            r.raise_for_status()
+            r.encoding = r.apparent_encoding
+            return r.text
+        except Exception as e:
+            self.log.exception(e)
             return ""
 
+
     def make_request(self, seed):
-        raise NotImplementedError
+        pass
 
     def parse_item(self, content, seed):
-        raise NotImplementedError
+        pass
 
     def process(self, seed):
         try:
@@ -284,7 +266,7 @@ class SpiderManger(object):
             if self.use_new_download_api:
                 content = self.download(request_dict)
             else:
-                content = self.get_request(request_dict)
+                content = self.do_request(request_dict)
             if content == "":
                 seed.retries = seed.retries - 1
                 if seed.retries > 0:
@@ -321,29 +303,21 @@ class SpiderManger(object):
 
         while True:
             try:
-                seed = self.seeds_queue.get(timeout=self.complete_timeout)
-                self.progress_increase()
-                if self.sleep_interval:
-                    time.sleep(self.sleep_interval + random.random() / 10)
+                seed = self.fetch_task(self.complete_timeout)
             except Exception as e:
-                self.log.info("job done !")
+                self.log.info("fetch task over time {}, spider will shutdown normally!")
                 break
             try:
-                documents = self.process(seed)
+                self.process(seed)
+                if not seed.is_ok():
+                    seed.retry()
             except Exception as e:
-                self.log.exception(e)
-                continue
-            try:
-                if documents and documents[0]["_status"] != 3:
-                    self.write(documents, write_seed=self._write_seed)
-            except Exception as e:
+                seed.retry()
                 self.log.exception(e)
                 continue
         client.close()
 
-    def write(self, documents, write_seed=True, seed_name="_seed"):
-        if not write_seed and seed_name:
-            [document.pop(seed_name) for document in documents if document["_status"] == 0]
+    def write(self, documents):
         self.db_collect.insert_many(documents)
 
     def main_loop(self, show_process=True):
