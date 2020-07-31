@@ -296,22 +296,22 @@ class SpiderManger(object):
                     #self.used_proxy = random.choice(self.proxies_pool)
                     #return [{"_status": 3,"_seed":seed}]
                 else:
-                    return [{"_status": 1,"_seed":seed}]
+                    return [{"_status": 1,"_seed": str(seed)}]
             else:
                 try:
                     result = self.parse_item(content, seed)
                     if result:
                         if isinstance(result, list):
-                            result = list(map(lambda x: dict(list(x.items()) + [("_status", 0), ("_seed",seed)]),
+                            result = list(map(lambda x: dict(list(x.items()) + [("_status", 0), ("_seed",str(seed))]),
                                               result))
                             return result
                         else:
-                            result.update({"_status":0,"_seed":seed})
+                            result.update({"_status":0,"_seed":str(seed)})
                             return [result]
                     else:
-                        return [{"_status": 4,"_seed":seed}]
+                        return [{"_status": 4, "_seed": str(seed)}]
                 except Exception as e:
-                    return [{"_status": 2,"_seed":seed}]
+                    return [{"_status": 2, "_seed": str(seed)}]
 
     def run(self):
         client = pymongo.MongoClient(self.mongo_config["addr"])
@@ -335,7 +335,7 @@ class SpiderManger(object):
                 continue
             try:
                 if documents and documents[0]["_status"] != 3:
-                    self.write(documents, self._write_seed)
+                    self.write(documents, write_seed=self._write_seed)
             except Exception as e:
                 self.log.exception(e)
                 continue
