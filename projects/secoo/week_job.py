@@ -31,7 +31,12 @@ class SecooWeekJob(SpiderManger):
         self.price_pattern = re.compile(r'secoo_price.*?</span>')
         self.br_pattern = re.compile(r'</i>.*?</span')
         for r in ranges:
-            page = self.get_request(request_url="http://list.secoo.com/all/0-0-0-0-0-7-0-0-0-10-{0}_{1}-0-100-0.shtml".format(r[0], r[1]))
+            request = {"url": "http://list.secoo.com/all/0-0-0-0-0-7-0-0-0-10-{0}_{1}-0-100-0.shtml".format(r[0], r[1]),
+                       "proxies": {"http": random.choice(self.proxies)},
+                       "headers": {"Connection": "close",
+                                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134'}
+                       }
+            page = self.get_request(request)
             tmp = totalpages_pattern.findall(page)
             if tmp:
                 page_num = int(tmp[0])
