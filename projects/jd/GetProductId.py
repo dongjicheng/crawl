@@ -13,12 +13,14 @@ from fake_useragent import UserAgent
 import tqdm
 from mongo import op
 import urllib
+from multiprocess.core import HttpProxy
 
 
 class GetProductId(SpiderManger):
     def __init__(self, **kwargs):
         super(GetProductId, self).__init__(**kwargs)
-        self.proxies = list(map(lambda x:("http://u{}:crawl@192.168.0.71:3128".format(x)), range(28)))
+        self.retries = 3
+        self.proxies = HttpProxy.getHttpProxy()
         self.ua = UserAgent()
         with op.DBManger() as m:
             last_brand_collect = m.get_lasted_collection("jingdong", filter={"name": {"$regex": r"^brand20\d\d\d\d\d\d$"}})
@@ -30,7 +32,7 @@ class GetProductId(SpiderManger):
             ]
             data_set = collections.DataSet(m.read_from(db_collect=("jingdong", last_brand_collect), out_field=("cate_id", "brand_id","name"), pipeline=pipeline))
             for i, seed in enumerate(data_set.distinct()):
-                self.seeds_queue.put(Seed(value=seed, retries=kwargs["retries"], type=0))
+                self.seeds_queue.put(Seed(value=seed, retries=self.retries, type=0))
         self.first_pettern = re.compile(r"search000014_log:{wids:'([,\d]*?)',")
         self.totalpage_perttern = re.compile(r'<div id="J_topPage"[\s\S]*?<b>\d+</b><em>/</em><i>(\d+)</i>')
 
@@ -41,7 +43,7 @@ class GetProductId(SpiderManger):
             en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
             url = 'https://list.jd.com/list.html?{0}&{1}&cid3={2}'.format(en_cate_id, en_name, cid3)
             request = {"url": url,
-                       "method:":"get",
+                       "method":"get",
                        "proxies": {"http": random.choice(self.proxies)},
                        "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
                                    "Referer": "https://list.jd.com/list.html?{0}&cid3={1}&cid2={2}".format(en_cate_id, cid3, cid2)}}
@@ -61,7 +63,7 @@ class GetProductId(SpiderManger):
             en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
             url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1'.format(en_cate_id, en_name, page, s)
             request = {"url": url,
-                       "method:":"get",
+                       "method":"get",
                        "proxies": {"http": random.choice(self.proxies)},
                        "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
                                    "Referer": url}}
@@ -88,7 +90,7 @@ class GetProductId(SpiderManger):
             en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
             url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&scrolling=y&log_id=1596108547754.6591&tpl=1_M&isList=1&show_items={4}'.format(en_cate_id, en_name, page, s, items)
             request = {"url": url,
-                       "method:":"get",
+                       "method":"get",
                        "proxies": {"http": random.choice(self.proxies)},
                        "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
                                    "Referer": "https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1".format(en_cate_id, en_name, page-1,s-30)}}

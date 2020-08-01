@@ -38,9 +38,6 @@ class Seed(object):
     def ok(self):
         self.is_ok = True
 
-    def is_ok(self):
-        return self.is_ok
-
     def retry(self):
         self.retries = self.retries - 1
 
@@ -235,7 +232,6 @@ class SpiderManger(object):
         try:
             r = s.request(**request)
             r.raise_for_status()
-            r.encoding = r.apparent_encoding
             return r.text
         except Exception as e:
             self.log.exception(e)
@@ -309,7 +305,7 @@ class SpiderManger(object):
                 break
             try:
                 self.process(seed)
-                if not seed.is_ok():
+                if not seed.is_ok:
                     seed.retry()
             except Exception as e:
                 seed.retry()
