@@ -1,0 +1,111 @@
+2020-07-30 11:02:23,097 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Connection timed out after 2000 milliseconds')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Connection timed out after 2000 milliseconds')
+2020-07-30 11:02:48,689 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Connection timed out after 2001 milliseconds')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Connection timed out after 2001 milliseconds')
+2020-07-30 11:02:52,895 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:02:55,909 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:03,284 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:06,320 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2000 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:12,060 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:15,075 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:23,140 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+2020-07-30 11:03:26,153 - spider.py - MainProcess - [line:215] - ERROR: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 208, in download
+    c.perform()
+pycurl.error: (28, 'Operation timed out after 2001 milliseconds with 0 out of 0 bytes received')
+2020-07-30 19:40:01,872 - spider.py - MainProcess - [line:216] - ERROR: (28, 'Connection timed out after 2000 milliseconds')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 209, in download
+    c.perform()
+pycurl.error: (28, 'Connection timed out after 2000 milliseconds')
+2020-07-30 19:44:33,308 - spider.py - MainProcess - [line:216] - ERROR: (28, 'Connection timed out after 2000 milliseconds')
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 209, in download
+    c.perform()
+pycurl.error: (28, 'Connection timed out after 2000 milliseconds')
+2020-07-31 20:20:09,916 - spider.py - MainProcess - [line:241] - ERROR: request() got an unexpected keyword argument 'proxy'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+TypeError: request() got an unexpected keyword argument 'proxy'
+2020-07-31 20:20:33,036 - spider.py - MainProcess - [line:241] - ERROR: request() got an unexpected keyword argument 'proxy'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+TypeError: request() got an unexpected keyword argument 'proxy'
+2020-07-31 20:21:15,262 - spider.py - MainProcess - [line:241] - ERROR: request() missing 1 required positional argument: 'method'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+TypeError: request() missing 1 required positional argument: 'method'
+2020-07-31 20:21:40,727 - spider.py - MainProcess - [line:241] - ERROR: 'str' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 521, in request
+    prep.url, proxies, stream, verify, cert
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 698, in merge_environment_settings
+    no_proxy = proxies.get('no_proxy') if proxies is not None else None
+AttributeError: 'str' object has no attribute 'get'
+2020-07-31 20:23:16,588 - spider.py - MainProcess - [line:241] - ERROR: 'str' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 521, in request
+    prep.url, proxies, stream, verify, cert
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 698, in merge_environment_settings
+    no_proxy = proxies.get('no_proxy') if proxies is not None else None
+AttributeError: 'str' object has no attribute 'get'
+2020-07-31 20:23:26,797 - spider.py - MainProcess - [line:241] - ERROR: 'str' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 521, in request
+    prep.url, proxies, stream, verify, cert
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 698, in merge_environment_settings
+    no_proxy = proxies.get('no_proxy') if proxies is not None else None
+AttributeError: 'str' object has no attribute 'get'
+2020-07-31 20:23:37,245 - spider.py - MainProcess - [line:241] - ERROR: 'set' object has no attribute 'get'
+Traceback (most recent call last):
+  File "D:\Users\admin\PycharmProjects\crawl\multiprocess\core\spider.py", line 236, in do_request
+    r = s.request(**request)
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 521, in request
+    prep.url, proxies, stream, verify, cert
+  File "C:\Users\admin\PycharmProjects\crawl\env\p3tf2keras\lib\site-packages\requests\sessions.py", line 698, in merge_environment_settings
+    no_proxy = proxies.get('no_proxy') if proxies is not None else None
+AttributeError: 'set' object has no attribute 'get'
