@@ -2,7 +2,7 @@
 import json
 import pymongo
 import pycurl
-from io import BytesIO
+import StringIO
 import urllib
 import time
 from datetime import datetime
@@ -20,7 +20,7 @@ def download(request):
     headers = ["User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"]
     while True:
         c = pycurl.Curl()
-        body = BytesIO()
+        body = StringIO.StringIO()
         c.setopt(pycurl.TIMEOUT, 5)
         #c.setopt(pycurl.CONNECTTIMEOUT, 1)
         c.setopt(pycurl.URL, request['url'])
@@ -48,15 +48,16 @@ def download(request):
                 raise pycurl.error(code, "")
             break
         except pycurl.error as err:
-            if err[0] in (7,28,56):
+            if err[0] in (7, 28, 56):
                 continue
             else:
-                print('{}, {}, {}'.format(time.strftime('%H:%M:%S'),
-                                                    err[0], err[1]))
+                print
+                '{}, {}, {}'.format(time.strftime('%H:%M:%S'),
+                                    err[0], err[1])
                 raise err
         finally:
             c.close()
-        
+
     return body.getvalue()
 
 def socompany():
@@ -142,6 +143,7 @@ def insert2companyAll():
         # print(co)
     db['companyALL'].insert(new_company)
     print('new company insert successful!')
+
 
 if __name__ == '__main__':
     socompany()
