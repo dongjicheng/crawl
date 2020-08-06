@@ -109,6 +109,14 @@ request = {"url": "https://list.jd.com/listNew.php?cat=1316%2C1381%2C1392&ev=exb
          'User-Agent': p.ua.chrome,
 'Referer': 'https://list.jd.com/list.html?cat=1316%2C1381%2C1392&ev=exbrand_%E5%B0%8F%E8%BF%B7%E7%B3%8A%5E&page=1&s=1&click=1'
         }}
+request = {"url": "https://item.jd.com/49473955203.html",
+                   "proxies": {"http":"http://u0:crawl@192.168.0.71:3128"},
+           "method":"get",
+                   "headers":{
+         'Connection': 'close',
+         'User-Agent': p.ua.chrome,
+'Referer': 'https://list.jd.com/list.html?cat=1316%2C1381%2C1392&ev=exbrand_%E5%B0%8F%E8%BF%B7%E7%B3%8A%5E&page=1&s=1&click=1'
+        }}
 import urllib
 print(urllib.parse.urlencode({"ev":"exbrand_膜法世家（Mask Family 1908）^"}))
 print(urllib.parse.urlencode({"cat":"1316,1381,1392"}))
@@ -118,4 +126,8 @@ first_pettern = re.compile(r"search000014_log:{wids:'([,\d]*?)',")
 r = p.do_request(request)
 print(first_pettern.findall(r))
 totalpage_perttern = re.compile(r'<div id="J_topPage"[\s\S]*?<b>\d+</b><em>/</em><i>(\d+)</i>11')
-print(totalpage_perttern.findall(r))
+skuids_pettern = re.compile(r'{.*?"skuId":(\d+).*?}')
+aaa= re.compile(r'<em class="u-jd">([\s\S]*?)</em>', re.MULTILINE)
+
+print(skuids_pettern.findall(r))
+print(aaa.findall(r))

@@ -21,7 +21,22 @@ class SuccessResult(Exception):
     pass
 
 
+class Counter(object):
+    def __init__(self, value=0):
+        self.counter = value
+
+    def increase(self, num=1):
+        self.counter = self.counter + num
+
+    def reset_count(self):
+        self.counter = 0
+
+    def get_count(self):
+        return self.counter
+
+
 class Seed(object):
+
     def __init__(self, value, retries=3, type = None, last_time=time.time(), rest_time=0,
                  is_faid_task_write=True, is_ok=False):
         self.retries = retries
@@ -31,12 +46,16 @@ class Seed(object):
         self.rest_time = rest_time
         self.is_faid_task_write = is_faid_task_write
         self.is_ok = is_ok
+        self.counter = Counter()
 
     def __str__(self):
         return str(self.value) + "," + str(self.type) + "," + str(self.is_ok)
 
     def ok(self):
         self.is_ok = True
+
+    def fail(self):
+        self.is_ok = False
 
     def retry(self):
         self.retries = self.retries - 1
@@ -98,15 +117,16 @@ class SpiderManger(object):
             seed = self.seeds_queue.get(timeout=timeout)
         if seed.retries > 0:
             if time.time() - seed.last_time < seed.rest_time:
+                self.log.debug("in rest_time!")
                 self.seeds_queue.put(seed)
                 return None
             else:
+                self.log.debug("get seed success!")
                 self.progress_increase()
                 return seed
         else:
-            if seed.is_faid_task_write:
-                self.write([{"_status": 3, "_seed": seed}])
-            return None
+            self.progress_increase()
+            return seed
 
     def progress_increase(self, step=1):
         with self.lock:
@@ -225,6 +245,13 @@ class SpiderManger(object):
         return result.decode(coding)
 
     def do_request(self, request):
+        #自定义参数
+        sleep_time = request.get("sleep_time", 0)
+        if "sleep_time" in request:
+            request.pop("sleep_time")
+        if sleep_time > 0:
+            time.sleep(sleep_time + random.random()/10)
+        #requests参数
         max_retries = request.get("max_retries", 3)
         s = requests.Session()
         s.mount('http://', HTTPAdapter(max_retries=max_retries))
@@ -301,14 +328,26 @@ class SpiderManger(object):
             try:
                 seed = self.fetch_task(self.complete_timeout)
             except Exception as e:
+                self.log.exception(e)
                 self.log.info("fetch task over time {}, spider will shutdown normally!")
                 break
             try:
-                self.process(seed)
-                if not seed.is_ok:
-                    seed.retry()
+                if seed:
+                    if seed.retries <= 0:
+                        self.log.debug("seed {} failed!".format(str(seed)))
+                        if seed.is_faid_task_write:
+                            self.write([{"_status": 3, "_seed": str(seed)}])
+                    self.process(seed)
+                    if not seed.is_ok:
+                        self.log.debug("seed {} retry!".format(str(seed)))
+                        seed.retry()
+                        self.seeds_queue.put(seed)
+                        self.progress_decrease()
             except Exception as e:
+                self.log.debug("seed {} retry!".format(str(seed)))
                 seed.retry()
+                self.seeds_queue.put(seed)
+                self.progress_decrease()
                 self.log.exception(e)
                 continue
         client.close()

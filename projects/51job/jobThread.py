@@ -10,7 +10,7 @@ import itertools
 from lxml import etree
 import re
 import threading
-import queue
+import Queue
 
 db = pymongo.MongoClient('mongodb://127.0.0.1')['51job']
 
@@ -65,7 +65,7 @@ def download(request):
 
 def producer():#生产所有的任务
     comIds = db["companyALL"].distinct("_id") #取出公司数据库id
-    q = queue.Queue(len(comIds)) #建立队列
+    q = Queue.Queue(len(comIds)) #建立队列
 
     db[jobCol].create_index("comId") #取出已完成公司信息
     items = db[jobCol].aggregate(

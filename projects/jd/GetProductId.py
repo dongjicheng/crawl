@@ -34,78 +34,105 @@ class GetProductId(SpiderManger):
             for i, seed in enumerate(data_set.distinct()):
                 self.seeds_queue.put(Seed(value=seed, retries=self.retries, type=0))
         self.first_pettern = re.compile(r"search000014_log:{wids:'([,\d]*?)',")
+        self.skuids_pettern = re.compile(r'{.*?"skuId":(\d+).*?}')
         self.totalpage_perttern = re.compile(r'<div id="J_topPage"[\s\S]*?<b>\d+</b><em>/</em><i>(\d+)</i>')
 
     def process(self, seed):
-        if seed.type == 0:
-            cate_id, _, name = seed.value
-            cid1, cid2, cid3 = re.split(',', cate_id)
-            en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
-            url = 'https://list.jd.com/list.html?{0}&{1}&cid3={2}'.format(en_cate_id, en_name, cid3)
-            request = {"url": url,
-                       "method":"get",
-                       "proxies": {"http": random.choice(self.proxies)},
-                       "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
-                                   "Referer": "https://list.jd.com/list.html?{0}&cid3={1}&cid2={2}".format(en_cate_id, cid3, cid2)}}
-            rs = self.do_request(request)
-            if rs:
-                page_strs = self.totalpage_perttern.findall(rs)
-                if page_strs:
-                    page_strs= page_strs[0]
-                    for i in range(1, int(page_strs) + 1):
-                        page,s = 2*i-1, 60*(i-1)+1
-                        self.seeds_queue.put(Seed(value=(seed.value[0],seed.value[1],seed.value[2],page,s), retries=self.retries, type=1))
-                        self.progress_decrease()
-                    if int(page_strs) >= 1 :
-                        seed.ok()
-        elif seed.type == 1:
-            cate_id, _, name, page, s = seed.value
-            en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
-            url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1'.format(en_cate_id, en_name, page, s)
-            request = {"url": url,
-                       "method":"get",
-                       "proxies": {"http": random.choice(self.proxies)},
-                       "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
-                                   "Referer": url}}
-            rs = self.do_request(request)
-            if rs:
-                r1 = self.first_pettern.findall(rs)
-                if r1:
-                    r1 = r1[0]
-                    if r1:
-                        buffer = []
-                        for pid in r1.split(","):
-                            buffer.append({"pid": pid, "cate_id": cate_id,"_seed": str(seed)})
-                        if buffer:
-                            self.write(buffer)
-                        self.seeds_queue.put(
-                            Seed(value=(seed.value[0], seed.value[1], seed.value[2], page + 1, s + 30, r1),
-                                 retries=self.retries,
-                                 type=2))
-                        self.progress_decrease()
-                        if buffer:
-                            seed.ok()
-        elif seed.type == 2:
-            cate_id, _, name, page, s, items = seed.value
-            en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
-            url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&scrolling=y&log_id=1596108547754.6591&tpl=1_M&isList=1&show_items={4}'.format(en_cate_id, en_name, page, s, items)
-            request = {"url": url,
-                       "method":"get",
-                       "proxies": {"http": random.choice(self.proxies)},
-                       "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
-                                   "Referer": "https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1".format(en_cate_id, en_name, page-1,s-30)}}
-            rs = self.do_request(request)
-            if rs:
-                r1 = self.first_pettern.findall(rs)
-                if r1:
-                    r1 = r1[0]
-                    if r1:
-                        buffer = []
-                        for pid in r1.split(","):
-                            buffer.append({"pid":pid,"cate_id":cate_id,"_seed": str(seed)})
-                        self.write(buffer)
-                        if buffer:
-                            seed.ok()
+        seed.fail()
+        seed.counter.reset_count()
+        buffer = []
+        cate_id, _, name = seed.value
+        cid1, cid2, cid3 = re.split(',', cate_id)
+        if cid1 == "1713":
+            en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode({"ev": "expublishers_" + name})
+        else:
+            en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode(
+                {"ev": "exbrand_" + name})
+        url = 'https://list.jd.com/list.html?{0}&{1}&cid3={2}'.format(en_cate_id, en_name, cid3)
+        request = {"url": url,
+                   "sleep_time": 0.1,
+                   "method":"get",
+                   "proxies": {"http": random.choice(self.proxies)},
+                   "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
+                               "Referer": "https://list.jd.com/list.html?{0}&cid3={1}&cid2={2}".format(en_cate_id, cid3, cid2)}}
+        rs = self.do_request(request)
+        if rs:
+            page_strs = self.totalpage_perttern.findall(rs)
+            if page_strs:
+                page_strs = page_strs[0]
+                for i in range(1, int(page_strs) + 1):
+                    page, s = 2*i-1, 60*(i-1)+1
+                    seed1 = Seed(value=(seed.value[0],seed.value[1],seed.value[2],page,s))
+                    cate_id, _, name, page, s = seed1.value
+                    en_cate_id, en_name = urllib.parse.urlencode({"cat": cate_id}), urllib.parse.urlencode(
+                        {"ev": "exbrand_" + name})
+                    url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1'.format(en_cate_id, en_name,
+                                                                                                page, s)
+                    request = {"url": url,
+                               "sleep_time": 0.1,
+                               "method": "get",
+                               "proxies": {"http": random.choice(self.proxies)},
+                               "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
+                                           "Referer": url}}
+                    rs1 = self.do_request(request)
+                    if rs1:
+                        r1 = self.first_pettern.findall(rs1)
+                        if r1:
+                            r1 = r1[0]
+                            if r1:
+                                for pid in r1.split(","):
+                                    seed.counter.increase()
+                                    request = {"url": "https://item.jd.com/{}.html".format(pid),
+                                           "sleep_time": 0.1,
+                                           "method": "get",
+                                           "proxies": {"http": random.choice(self.proxies)},
+                                           "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
+                                                       "Referer": "https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1".format(
+                                                           en_cate_id, en_name, page, s)}}
+                                    rs2 = self.do_request(request)
+                                    if rs2:
+                                        r2 = self.skuids_pettern.findall(rs2)
+                                        for skuid in r2:
+                                            buffer.append({"skuid": skuid, "cate_id": cate_id, "_seed": str(seed)})
+
+                                seed2 = Seed(value=(seed.value[0], seed.value[1], seed.value[2], page + 1, s + 30, r1))
+                                cate_id, _, name, page, s, items = seed2.value
+                                en_cate_id, en_name = urllib.parse.urlencode(
+                                    {"cat": cate_id}), urllib.parse.urlencode({"ev": "exbrand_" + name})
+                                url = 'https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&scrolling=y&log_id=1596108547754.6591&tpl=1_M&isList=1&show_items={4}'.format(
+                                    en_cate_id, en_name, page, s, items)
+                                request = {"url": url,
+                                           "sleep_time": 0.1,
+                                           "method": "get",
+                                           "proxies": {"http": random.choice(self.proxies)},
+                                           "headers": {"Connection": "close", "User-Agent": self.ua.chrome,
+                                                       "Referer": "https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1".format(
+                                                           en_cate_id, en_name, page - 1, s - 30)}}
+                                rs3 = self.do_request(request)
+                                if rs3:
+                                    r3 = self.first_pettern.findall(rs3)
+                                    if r3:
+                                        r3 = r3[0]
+                                        if r3:
+                                            for pid in r3.split(","):
+                                                seed.counter.increase()
+                                                request = {"url": "https://item.jd.com/{}.html".format(pid),
+                                                           "sleep_time": 0.1,
+                                                           "method": "get",
+                                                           "proxies": {"http": random.choice(self.proxies)},
+                                                           "headers": {"Connection": "close",
+                                                                       "User-Agent": self.ua.chrome,
+                                                                       "Referer": "https://list.jd.com/list.html?{0}&{1}&page={2}&s={3}&click=1".format(
+                                                                           en_cate_id, en_name, page-1, s-30)}}
+                                                rs4 = self.do_request(request)
+                                                if rs4:
+                                                    r4 = self.skuids_pettern.findall(rs4)
+                                                    for skuid in r4:
+                                                        buffer.append(
+                                                            {"skuid": skuid, "cate_id": cate_id, "_seed": str(seed)})
+                if seed.counter.get_count() > 60*(int(page_strs)-1):
+                    self.write(buffer)
+                    seed.ok()
 
 
 if __name__ == "__main__":

@@ -46,6 +46,10 @@ class DBManger(object):
                         self.collection.aggregate(pipeline, allowDiskUse=True))
         return result
 
+    def aggregate(self, db_collect, pipeline):
+        self.switch_db_collection(db_collect)
+        return self.collection.aggregate(pipeline, allowDiskUse=True)
+
     def insert_one_dict(self, db_collect, data_dict):
         self.switch_db_collection(db_collect)
         self.collection.insert_one(data_dict)
