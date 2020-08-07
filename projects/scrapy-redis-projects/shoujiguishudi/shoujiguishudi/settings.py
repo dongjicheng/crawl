@@ -13,8 +13,8 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 SCHEDULER_PERSIST = False
-#SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderPriorityQueue"
-SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderQueue"
+SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderPriorityQueue"
+#SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderQueue"
 #SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderStack"
 COOKIES_ENABLED = False
 
@@ -59,9 +59,12 @@ LOG_FILE = 'log.txt'
 
 LOG_FORMAT='%(asctime)s - %(filename)s -[process:%(processName)s,threadid:%(thread)d]- [line:%(lineno)d] - %(levelname)s: %(message)s'
 
-
+import scrapy.downloadermiddlewares.retry
 DOWNLOADER_MIDDLEWARES = {
+        "scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware":400,
         "shoujiguishudi.downloader_middlewares.CustomHeadersDownLoadMiddleware": 401,
+        "scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware":402,
+        "scrapy.downloadermiddlewares.retry.RetryMiddleware": 403,
     }
 ITEM_PIPELINES = {
     'scrapy_redis.pipelines.RedisPipeline': 400,
@@ -72,6 +75,15 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 10
 CONCURRENT_REQUESTS_PER_IP = 10
 
 DOWNLOAD_DELAY = 0
+DOWNLOAD_TIMEOUT = 10
+
+RETRY_ENABLED=True
+RETRY_TIMES = 10
+#RETRY_HTTP_CODES=["404"]
+RETRY_PRIORITY_ADJUST=-1
+
+DEFAULT_REQUEST_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36",
+                         "Connection":"keep-alive"}
 
 #REDIS_URL': 'url',
 REDIS_ENCODING="utf-8"
