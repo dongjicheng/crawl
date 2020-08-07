@@ -8,7 +8,6 @@ import logging
 import time
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
-logger = logging.getLogger(__name__)
 
 from fake_useragent import UserAgent
 
@@ -26,15 +25,21 @@ class CustomHeadersDownLoadMiddleware(object):
     def get_http_proxy(cls):
         proxies = []
         proxies.extend(map(lambda x: ("http://u{0}:crawl@192.168.0.71:3128".format(x)), range(28)))
-        proxies.extend(map(lambda x: ("http://u{1}:crawl@192.168.0.{0}:3128".format(x[0], x[1])),
-                           itertools.product(range(72, 79), range(30))))
+        #proxies.extend(map(lambda x: ("http://u{1}:crawl@192.168.0.{0}:3128".format(x[0], x[1])),
+        #                  itertools.product(range(72, 79), range(30))))
         random.shuffle(proxies)
         return proxies
 
     def process_request(self, request, spider):
         request.headers['user-agent'] = self.user_agent.chrome
-        request.headers["Connection"] = "close"
+        request.headers["Connection"] = "keep-alive"
         request.headers["accept-encoding"] = "gzip, deflate, br"
         request.headers["accept-language"] = "zh-CN,zh;q=0.9"
         request.meta['proxy'] = random.choice(self.get_http_proxy())
-        logger.debug(request.headers)
+        self.logger.info(request.headers)
+
+    @property
+    def logger(self):
+        logger = logging.getLogger(__name__)
+        return logging.LoggerAdapter(logger, {'middleware': self})
+

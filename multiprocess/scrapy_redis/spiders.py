@@ -10,10 +10,8 @@ import redis
 from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
 from scrapy_redis.utils import bytes_to_str
-from scrapy_redis import get_redis_from_settings
 from tqdm import tqdm
 
-import logging
 
 class JiChengSpider(RedisSpider):
 
@@ -23,17 +21,19 @@ class JiChengSpider(RedisSpider):
         return obj
 
     def make_request_from_data(self, data):
+        data = bytes_to_str(data, self.redis_encoding)
         data = eval(data)
-        url = bytes_to_str(data["url"], self.redis_encoding)
-        meta = data["meta"]
-        return Request(url, meta=meta, dont_filter=True)
+        self.logger.info(data)
+        return Request(url=data["url"], meta=data["meta"], dont_filter=True)
 
 
 class ThreadMonitor(threading.Thread):
     def __init__(self, redis_key, interval=1, bar_name=None):
         threading.Thread.__init__(self)
         self.setDaemon(True)
-        self.redis = redis.Redis(host='192.168.0.117', port=6379, db=0)
+        #self.redis = redis.Redis(host='192.168.0.117', port=6379, db=0)
+        self.setting = get_project_settings()
+        self.redis = get_redis_from_settings(self.setting)
         self.redis_key = redis_key
         self.total = self.redis.scard(self.redis_key)
         self.interval = interval
@@ -64,7 +64,9 @@ class ThreadWriter(threading.Thread):
         self.interval = interval
         self.buffer_size = buffer_size
         self.counter = 0
-        self.redis = redis.Redis(host='192.168.0.117', port=6379, db=0)
+        #self.redis = redis.Redis(host='192.168.0.117', port=6379, db=0)
+        self.setting = get_project_settings()
+        self.redis = get_redis_from_settings(self.setting)
         self.redis_key = redis_key
         self.total = self.redis.llen(self.redis_key)
         if bar_name:
@@ -170,18 +172,31 @@ from scrapy_redis.connection import (
 from scrapy.utils.project import get_project_settings
 
 from scrapy_redis.connection import get_redis_from_settings
+
+import logging
+
+
 class ClusterRunner(object):
     def __init__(self, spider_name, thread_writer=None, spider_num=psutil.cpu_count(logical=True)):
         self.spider_name = spider_name
         self.spider_num = spider_num
-        self.start_urls_redis_key = "'%(name)s:start_urls" % {"name": self.spider_name}
-        self.items_redis_key = "'%(name)s::items" % {"name": self.spider_name}
+        self.start_urls_redis_key = "%(name)s:start_urls" % {"name": self.spider_name}
+        self.items_redis_key = "%(name)s:items" % {"name": self.spider_name}
         self.execute = execute
         self.setting = get_project_settings()
+        self.logger = self.get_loger()
         self.redis = get_redis_from_settings(self.setting)
-        #self.redis = redis.Redis(host='192.168.0.117', port=6379)
-        self.spider_list = []
-        self.logger = logging.getLogger(__name__)
+        self.redis = redis.Redis(host='192.168.0.117', port=6379, db=0)
+        self.logger.info(self.redis)
+
+    def get_loger(self):
+        log_config = {}
+        parmer_map = {"LOG_LEVEL":"level","LOG_FILE":"filename","LOG_FORMAT":"format"}
+        for key in self.setting:
+            if key in parmer_map:
+                log_config[parmer_map[key]] = self.setting[key]
+        logging.basicConfig(**log_config)
+        return logging.getLogger(__name__)
 
     def get_thread_writer(self):
         return None
@@ -207,6 +222,7 @@ class ClusterRunner(object):
             self.logger.info("start monitor success !")
 
         #开启爬虫
+        self.spider_list = []
         if self.spider_num > 1:
             for i in range(self.spider_num):
                 self.spider_list.append(Process(target=self.run_spider, name=self.spider_name + "-" + str(i), kwargs={"spider_name": self.spider_name}))
