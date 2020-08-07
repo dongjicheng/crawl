@@ -227,6 +227,7 @@ class ClusterRunner(object):
             for i in range(self.spider_num):
                 self.spider_list.append(Process(target=self.run_spider, name=self.spider_name + "-" + str(i), kwargs={"spider_name": self.spider_name}))
             for p in self.spider_list:
+                p.daemon = True
                 p.start()
             for p in self.spider_list:
                 p.join()
